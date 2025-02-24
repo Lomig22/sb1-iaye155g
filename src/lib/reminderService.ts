@@ -87,58 +87,70 @@ export async function sendManualReminder(receivableId: string): Promise<boolean>
       .eq('id', receivableId)
       .single();
 
-    if (receivableError) throw receivableError;
-    if (!receivable) return false;
+    return await send_email({
+      list: [
+        {
+          to: [
+            receivable.client.email
+          ],
+          subject: "test",
+          html: "<p style='color: red;'>test</p>"
+        }
+      ]
+    })
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return false;
+    // if (receivableError) throw receivableError;
+    // if (!receivable) return false;
 
-    const emailSettings = await getEmailSettings(user.id);
-    if (!emailSettings) return false;
+    // const { data: { user } } = await supabase.auth.getUser();
+    // if (!user) return false;
 
-    const dueDate = new Date(receivable.due_date);
-    const today = new Date();
-    const daysLate = Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
+    // const emailSettings = await getEmailSettings(user.id);
+    // if (!emailSettings) return false;
 
-    const { level, template } = determineReminderLevel(daysLate, receivable.client);
-    if (!level || !template) return false;
+    // const dueDate = new Date(receivable.due_date);
+    // const today = new Date();
+    // const daysLate = Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
 
-    const emailContent = formatTemplate(template, {
-      company: receivable.client.company_name,
-      amount: receivable.amount,
-      invoice_number: receivable.invoice_number,
-      due_date: receivable.due_date,
-      days_late: daysLate
-    });
+    // const { level, template } = determineReminderLevel(daysLate, receivable.client);
+    // if (!level || !template) return false;
 
-    const emailSent = await sendEmail(
-      emailSettings,
-      receivable.client.email,
-      `Relance facture ${receivable.invoice_number}`,
-      emailContent
-    );
+    // const emailContent = formatTemplate(template, {
+    //   company: receivable.client.company_name,
+    //   amount: receivable.amount,
+    //   invoice_number: receivable.invoice_number,
+    //   due_date: receivable.due_date,
+    //   days_late: daysLate
+    // });
 
-    if (emailSent) {
-      // Enregistrer la relance
-      await supabase.from('reminders').insert({
-        receivable_id: receivableId,
-        reminder_type: level,
-        reminder_date: new Date().toISOString(),
-        email_sent: true,
-        email_content: emailContent
-      });
+    // const emailSent = await sendEmail(
+    //   emailSettings,
+    //   receivable.client.email,
+    //   `Relance facture ${receivable.invoice_number}`,
+    //   emailContent
+    // );
 
-      // Mettre à jour le statut de la créance
-      await supabase
-        .from('receivables')
-        .update({ 
-          status: 'reminded',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', receivableId);
+    // if (emailSent) {
+    //   // Enregistrer la relance
+    //   await supabase.from('reminders').insert({
+    //     receivable_id: receivableId,
+    //     reminder_type: level,
+    //     reminder_date: new Date().toISOString(),
+    //     email_sent: true,
+    //     email_content: emailContent
+    //   });
 
-      return true;
-    }
+    //   // Mettre à jour le statut de la créance
+    //   await supabase
+    //     .from('receivables')
+    //     .update({ 
+    //       status: 'reminded',
+    //       updated_at: new Date().toISOString()
+    //     })
+    //     .eq('id', receivableId);
+
+    //   return true;
+    // }
 
     return false;
   } catch (error) {
@@ -219,7 +231,7 @@ export async function checkAndSendReminders(userId: string): Promise<void> {
 
         await supabase
           .from('receivables')
-          .update({ 
+          .update({
             status: 'reminded',
             updated_at: new Date().toISOString()
           })
@@ -249,4 +261,25 @@ export function startReminderService(userId: string): void {
   checkAndSendReminders(userId).catch(error => {
     console.error('Erreur lors du démarrage initial du service de relance:', error);
   });
+}
+
+
+export async function send_email(data: any) {
+  try {
+    const auth_data = localStorage.getItem('paymentflow-auth');
+    if (auth_data) {
+      const access_token = JSON.parse(auth_data).access_token;
+      let res = await fetch('https://rsomeerndudkhyhpigmn.supabase.co/functions/v1/send-email', {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${access_token}`
+        },
+        body: JSON.stringify(data)
+      })
+      return await res.json()
+    }
+  } catch (error) {
+    return error;
+  }
 }
