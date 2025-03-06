@@ -31,6 +31,7 @@ export interface Receivable {
   code?: string;              // Code
   amount: number;
   paid_amount?: number;       // Montant réglé
+  document_date?: string;     // Date pièce
   due_date: string;
   status: 'pending' | 'reminded' | 'paid' | 'late' | 'legal';
   invoice_pdf_url?: string;

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Client } from '../../types/database';
-import { X, Upload } from 'lucide-react';
+import { X, Upload, Plus } from 'lucide-react';
 
 interface ReceivableFormProps {
   onClose: () => void;
@@ -13,13 +13,27 @@ export default function ReceivableForm({ onClose, onReceivableAdded, preselected
   const [loading, setLoading] = useState(false);
   const [clients, setClients] = useState<Client[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [isNewClient, setIsNewClient] = useState(false);
   const [formData, setFormData] = useState({
     client_id: preselectedClient?.id || '',
     invoice_number: '',
     amount: '',
+    paid_amount: '',
+    document_date: '',
     due_date: '',
+    installment_number: '',
     status: 'pending',
     invoice_pdf_url: ''
+  });
+  const [newClientData, setNewClientData] = useState({
+    company_name: '',
+    email: '',
+    phone: '',
+    address: '',
+    postal_code: '',
+    city: '',
+    country: 'France',
+    needs_reminder: true
   });
 
   useEffect(() => {
@@ -49,54 +63,41 @@ export default function ReceivableForm({ onClose, onReceivableAdded, preselected
     }
   };
 
-  const updateClientStatus = async (clientId: string) => {
-    try {
-      // Récupérer toutes les créances du client
-      const { data: clientReceivables, error: receivablesError } = await supabase
-        .from('receivables')
-        .select('status, due_date')
-        .eq('client_id', clientId);
-
-      if (receivablesError) throw receivablesError;
-
-      // Vérifier s'il y a des créances en retard
-      const today = new Date();
-      const hasOverdueReceivables = clientReceivables?.some(receivable => {
-        const dueDate = new Date(receivable.due_date);
-        return dueDate < today && receivable.status !== 'paid';
-      });
-
-      // Mettre à jour le statut de relance du client
-      const { error: updateError } = await supabase
-        .from('clients')
-        .update({ 
-          needs_reminder: hasOverdueReceivables,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', clientId);
-
-      if (updateError) throw updateError;
-
-      // Mettre à jour la liste des clients en local si nécessaire
-      setClients(prevClients => 
-        prevClients.map(client => 
-          client.id === clientId 
-            ? { ...client, needs_reminder: hasOverdueReceivables }
-            : client
-        )
-      );
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour du statut client:', error);
-      throw error;
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('Utilisateur non authentifié');
+      }
+
+      let clientId = formData.client_id;
+
+      // Si c'est un nouveau client, le créer d'abord
+      if (isNewClient) {
+        const { data: newClient, error: clientError } = await supabase
+          .from('clients')
+          .insert([{
+            ...newClientData,
+            owner_id: user.id
+          }])
+          .select()
+          .single();
+
+        if (clientError) throw clientError;
+        clientId = newClient.id;
+      } else {
+        // Mettre à jour le client existant pour activer les relances
+        await supabase
+          .from('clients')
+          .update({ needs_reminder: true })
+          .eq('id', clientId);
+      }
+
       // Vérifier si la date d'échéance est dépassée
       const dueDate = new Date(formData.due_date);
       const today = new Date();
@@ -107,7 +108,11 @@ export default function ReceivableForm({ onClose, onReceivableAdded, preselected
         .from('receivables')
         .insert([{
           ...formData,
+          client_id: clientId,
           amount: parseFloat(formData.amount),
+          paid_amount: formData.paid_amount ? parseFloat(formData.paid_amount) : null,
+          document_date: formData.document_date || null,
+          installment_number: formData.installment_number || null,
           status: isOverdue ? 'late' : 'pending',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
@@ -118,10 +123,6 @@ export default function ReceivableForm({ onClose, onReceivableAdded, preselected
       if (error) throw error;
       
       if (data) {
-        // Mettre à jour le statut du client
-        await updateClientStatus(data.client_id);
-        
-        // Notifier le composant parent avec les données mises à jour
         onReceivableAdded(data);
         onClose();
       }
@@ -157,20 +158,114 @@ export default function ReceivableForm({ onClose, onReceivableAdded, preselected
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Client *
               </label>
-              <select
-                required
-                value={formData.client_id}
-                onChange={(e) => setFormData({ ...formData, client_id: e.target.value })}
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                disabled={!!preselectedClient}
-              >
-                <option value="">Sélectionner un client</option>
-                {clients.map((client) => (
-                  <option key={client.id} value={client.id}>
-                    {client.company_name}
-                  </option>
-                ))}
-              </select>
+              {!preselectedClient && (
+                <div className="flex items-center gap-2 mb-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsNewClient(false)}
+                    className={`px-3 py-1 rounded-md ${!isNewClient ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}
+                  >
+                    Client existant
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsNewClient(true)}
+                    className={`px-3 py-1 rounded-md ${isNewClient ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}
+                  >
+                    Nouveau client
+                  </button>
+                </div>
+              )}
+
+              {!isNewClient ? (
+                <select
+                  required
+                  value={formData.client_id}
+                  onChange={(e) => setFormData({ ...formData, client_id: e.target.value })}
+                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  disabled={!!preselectedClient}
+                >
+                  <option value="">Sélectionner un client</option>
+                  {clients.map((client) => (
+                    <option key={client.id} value={client.id}>
+                      {client.company_name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Nom de l'entreprise *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={newClientData.company_name}
+                      onChange={(e) => setNewClientData({ ...newClientData, company_name: e.target.value })}
+                      className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Email *
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={newClientData.email}
+                      onChange={(e) => setNewClientData({ ...newClientData, email: e.target.value })}
+                      className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Téléphone
+                    </label>
+                    <input
+                      type="tel"
+                      value={newClientData.phone}
+                      onChange={(e) => setNewClientData({ ...newClientData, phone: e.target.value })}
+                      className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Adresse
+                    </label>
+                    <input
+                      type="text"
+                      value={newClientData.address}
+                      onChange={(e) => setNewClientData({ ...newClientData, address: e.target.value })}
+                      className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Code postal
+                      </label>
+                      <input
+                        type="text"
+                        value={newClientData.postal_code}
+                        onChange={(e) => setNewClientData({ ...newClientData, postal_code: e.target.value })}
+                        className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Ville
+                      </label>
+                      <input
+                        type="text"
+                        value={newClientData.city}
+                        onChange={(e) => setNewClientData({ ...newClientData, city: e.target.value })}
+                        className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div>
@@ -188,7 +283,7 @@ export default function ReceivableForm({ onClose, onReceivableAdded, preselected
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Montant (€) *
+                Montant devise (€) *
               </label>
               <input
                 type="number"
@@ -203,6 +298,32 @@ export default function ReceivableForm({ onClose, onReceivableAdded, preselected
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
+                Montant Réglé devise (€)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.paid_amount}
+                onChange={(e) => setFormData({ ...formData, paid_amount: e.target.value })}
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Date pièce
+              </label>
+              <input
+                type="date"
+                value={formData.document_date}
+                onChange={(e) => setFormData({ ...formData, document_date: e.target.value })}
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Date d'échéance *
               </label>
               <input
@@ -210,6 +331,18 @@ export default function ReceivableForm({ onClose, onReceivableAdded, preselected
                 required
                 value={formData.due_date}
                 onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Numéro échéance
+              </label>
+              <input
+                type="text"
+                value={formData.installment_number}
+                onChange={(e) => setFormData({ ...formData, installment_number: e.target.value })}
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
