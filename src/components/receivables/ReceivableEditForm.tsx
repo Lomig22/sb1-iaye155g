@@ -15,7 +15,10 @@ export default function ReceivableEditForm({ onClose, onReceivableUpdated, recei
   const [formData, setFormData] = useState({
     invoice_number: receivable.invoice_number,
     amount: receivable.amount.toString(),
+    paid_amount: receivable.paid_amount ? receivable.paid_amount.toString() : '',
+    document_date: receivable.document_date || '',
     due_date: receivable.due_date,
+    installment_number: receivable.installment_number || '',
     status: receivable.status,
     invoice_pdf_url: receivable.invoice_pdf_url || ''
   });
@@ -42,17 +45,59 @@ export default function ReceivableEditForm({ onClose, onReceivableUpdated, recei
     };
   }, []);
 
+  // Fonction pour vérifier si un client a d'autres créances impayées
+  const checkClientUnpaidReceivables = async (clientId: string, currentReceivableId: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase
+        .from('receivables')
+        .select('id')
+        .eq('client_id', clientId)
+        .neq('id', currentReceivableId) // Exclure la créance actuelle
+        .not('status', 'eq', 'paid') // Toutes les créances non payées
+        .limit(1);
+
+      if (error) throw error;
+      
+      // Si data est vide, le client n'a pas d'autres créances impayées
+      return data && data.length === 0;
+    } catch (error) {
+      console.error('Erreur lors de la vérification des créances:', error);
+      return false;
+    }
+  };
+
+  // Fonction pour mettre à jour le statut de relance du client
+  const updateClientReminderStatus = async (clientId: string, needsReminder: boolean): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('clients')
+        .update({ needs_reminder: needsReminder })
+        .eq('id', clientId);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du statut de relance:', error);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
     try {
+      const wasAlreadyPaid = receivable.status === 'paid';
+      const willBePaid = formData.status === 'paid';
+      
+      // Mettre à jour la créance
       const { data, error } = await supabase
         .from('receivables')
         .update({
           ...formData,
           amount: parseFloat(formData.amount),
+          paid_amount: formData.paid_amount ? parseFloat(formData.paid_amount) : null,
+          document_date: formData.document_date || null,
+          installment_number: formData.installment_number || null,
           updated_at: new Date().toISOString()
         })
         .eq('id', receivable.id)
@@ -60,6 +105,25 @@ export default function ReceivableEditForm({ onClose, onReceivableUpdated, recei
         .single();
 
       if (error) throw error;
+      
+      // Si le statut passe à "payé" et n'était pas déjà payé
+      if (willBePaid && !wasAlreadyPaid) {
+        // Vérifier si le client a d'autres créances impayées
+        const noOtherUnpaidReceivables = await checkClientUnpaidReceivables(
+          receivable.client.id, 
+          receivable.id
+        );
+        
+        // Si le client n'a plus de créances impayées, désactiver les relances
+        if (noOtherUnpaidReceivables) {
+          await updateClientReminderStatus(receivable.client.id, false);
+          
+          // Mettre à jour l'objet data pour refléter le changement
+          if (data && data.client) {
+            data.client.needs_reminder = false;
+          }
+        }
+      }
       
       if (data) {
         // Mise à jour du parent avec les nouvelles données
@@ -115,7 +179,7 @@ export default function ReceivableEditForm({ onClose, onReceivableUpdated, recei
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Montant (€) *
+                Montant devise (€) *
               </label>
               <input
                 type="number"
@@ -130,6 +194,32 @@ export default function ReceivableEditForm({ onClose, onReceivableUpdated, recei
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
+                Montant Réglé devise (€)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.paid_amount}
+                onChange={(e) => setFormData({ ...formData, paid_amount: e.target.value })}
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Date pièce
+              </label>
+              <input
+                type="date"
+                value={formData.document_date}
+                onChange={(e) => setFormData({ ...formData, document_date: e.target.value })}
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Date d'échéance *
               </label>
               <input
@@ -137,6 +227,18 @@ export default function ReceivableEditForm({ onClose, onReceivableUpdated, recei
                 required
                 value={formData.due_date}
                 onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Numéro échéance
+              </label>
+              <input
+                type="text"
+                value={formData.installment_number}
+                onChange={(e) => setFormData({ ...formData, installment_number: e.target.value })}
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>

@@ -64,7 +64,8 @@ function App() {
     );
   }
 
-  const isResetPasswordPage = window.location.hash.includes('type=recovery');
+  // Check if URL contains recovery token
+  const isResetPasswordPage = window.location.href.includes('type=recovery');
 
   if (isResetPasswordPage) {
     return <ResetPassword />;
