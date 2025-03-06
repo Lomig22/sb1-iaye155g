@@ -524,12 +524,16 @@ export default function CSVImportModal({
 
 					// Trouver le client correspondant
 					const clientId = getClientId(clientName);
-					const client = clientId ? clientMap[clientId] : null;
-
+					//shanaka (Start)
+					// Check if the client is already in the new clients map
+					const client = clientId
+						? clientMap[clientId]
+						: newClientsMap[`new-${clientName}`] ?? null;
+					//shanaka (Finish)
 					// Si le client n'est pas trouvé, créer un nouveau client temporaire
 					if (!client) {
 						// Générer un ID temporaire pour le nouveau client
-						const tempId = `new-${index}-${Date.now()}`;
+						const tempId = `new-${clientName}`;
 
 						// Créer un nouveau client avec le nom fourni
 						const newClient: Client = {
