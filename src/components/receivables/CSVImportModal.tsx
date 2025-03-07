@@ -322,13 +322,21 @@ export default function CSVImportModal({
 			return exactMatch.id;
 		}
 
+		//Shanaka (Start)
+		// Removed partial match as we need the exact match to get the correct client id to see if the client is new
 		// Chercher par correspondance partielle
-		const partialMatches = clients.filter(
-			(c) =>
+		const partialMatches = clients.filter((c) => {
+			if (c.company_name === '') {
+				return clientKey === '';
+			}
+			if (clientKey === '') {
+				return c.company_name === '';
+			}
+			return (
 				c.company_name.toLowerCase().includes(clientKey) ||
 				clientKey.includes(c.company_name.toLowerCase())
-		);
-
+			);
+		});
 		if (partialMatches.length === 1) {
 			return partialMatches[0].id;
 		}
@@ -341,6 +349,7 @@ export default function CSVImportModal({
 			);
 			return partialMatches[0].id;
 		}
+		//Shanaka (Finish)
 
 		// Recherche avec caractères spéciaux nettoyés
 		const cleanClientKey = clientKey.replace(/[&@]/g, '').trim();
@@ -355,7 +364,6 @@ export default function CSVImportModal({
 						c.company_name.toLowerCase().replace(/[&@]/g, '')
 					)
 			);
-
 			if (cleanMatches.length === 1) {
 				return cleanMatches[0].id;
 			}
@@ -378,15 +386,21 @@ export default function CSVImportModal({
 
 		// Recherche par nom partiel sans tenir compte des espaces et de la casse
 		const normalizedKey = clientKey.replace(/\s+/g, '');
-		const normalizedMatches = clients.filter(
-			(c) =>
+		const normalizedMatches = clients.filter((c) => {
+			if (c.company_name === '') {
+				return normalizedKey === '';
+			}
+			if (normalizedKey === '') {
+				return c.company_name === '';
+			}
+			return (
 				c.company_name
 					.toLowerCase()
 					.replace(/\s+/g, '')
 					.includes(normalizedKey) ||
 				normalizedKey.includes(c.company_name.toLowerCase().replace(/\s+/g, ''))
-		);
-
+			);
+		});
 		if (normalizedMatches.length === 1) {
 			return normalizedMatches[0].id;
 		}
@@ -526,6 +540,7 @@ export default function CSVImportModal({
 					const clientId = getClientId(clientName);
 					//shanaka (Start)
 					// Check if the client is already in the new clients map
+
 					const client = clientId
 						? clientMap[clientId]
 						: newClientsMap[`new-${clientName}`] ?? null;
