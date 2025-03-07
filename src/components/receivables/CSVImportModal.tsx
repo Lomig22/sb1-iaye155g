@@ -816,6 +816,7 @@ export default function CSVImportModal({
 						.upsert(batch, {
 							//Shanaka(Start)
 							// Removed the extra on conflict statement
+							onConflict: 'client_id, invoice_number',
 							//Shanaka(Finish)
 							ignoreDuplicates: false,
 						});
