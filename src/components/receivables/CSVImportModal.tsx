@@ -25,21 +25,6 @@ const columnMapping: { [key: string]: string } = {
 	référence: 'facture',
 	reference: 'facture',
 
-	// Numéro dans gestion
-	'n° gestion': 'management_number',
-	'n° dans gestion': 'management_number',
-	'n°gestion': 'management_number',
-	'num gestion': 'management_number',
-	'numéro gestion': 'management_number',
-	'numero gestion': 'management_number',
-	'ref gestion': 'management_number',
-	'référence gestion': 'management_number',
-	'reference gestion': 'management_number',
-	'management number': 'management_number',
-	management_number: 'management_number',
-	'internal ref': 'management_number',
-	'internal reference': 'management_number',
-
 	// Code
 	code: 'code',
 	'code facture': 'code',
