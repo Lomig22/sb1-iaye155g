@@ -9,6 +9,7 @@ interface CSVImportModalProps {
 	onImportSuccess: (importedCount: number) => void;
 	receivables: (Receivable & { client: Client })[];
 }
+
 // Shanaka (Start)
 const columnMapping: { [key: string]: string } = {
 	// Numéro de facture
@@ -26,6 +27,20 @@ const columnMapping: { [key: string]: string } = {
 	référence: 'facture',
 	reference: 'facture',
 
+	// Numéro dans gestion
+	'n° gestion': 'facture',
+	'n° dans gestion': 'facture',
+	'n°gestion': 'facture',
+	'num gestion': 'facture',
+	'numéro gestion': 'facture',
+	'numero gestion': 'facture',
+	'ref gestion': 'facture',
+	'référence gestion': 'facture',
+	'reference gestion': 'facture',
+	'management number': 'facture',
+	management_number: 'facture',
+	'internal ref': 'facture',
+	'internal reference': 'facture',
 	// Code
 	code: 'code',
 	'code facture': 'code',
@@ -212,9 +227,9 @@ export default function CSVImportModal({
 					// Vérification du format des colonnes
 					const missingHeaders = expectedHeaders.filter(
 						(header) =>
-							!cleanedHeaders.some(
-								(h) => h.toLowerCase() === header.toLowerCase()
-							)
+							!cleanedHeaders.some((h) => {
+								return h.toLowerCase() === header.toLowerCase();
+							})
 					);
 
 					if (missingHeaders.length > 0) {
@@ -303,7 +318,6 @@ export default function CSVImportModal({
 		const exactMatch = clients.find(
 			(c) => c.company_name.toLowerCase().trim() === clientKey
 		);
-		console.log('exactMatch', exactMatch, clients, clientKey);
 		// Shanaka (Finish)
 
 		if (exactMatch) {
