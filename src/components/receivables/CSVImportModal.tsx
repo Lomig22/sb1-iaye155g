@@ -157,10 +157,10 @@ export default function CSVImportModal({
 		'Facture',
 		'Montant devise',
 		'Montant Réglé devise',
-		'Date pièce',
-		'Échéance',
-		'Numéro échéance',
-		'Statut',
+		// 'Date pièce',
+		// 'Échéance',
+		// 'Numéro échéance',
+		// 'Statut',
 	];
 
 	// Désactiver le défilement du body quand la modale est ouverte
