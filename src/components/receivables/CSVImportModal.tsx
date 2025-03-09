@@ -7,6 +7,7 @@ import Papa from 'papaparse';
 interface CSVImportModalProps {
 	onClose: () => void;
 	onImportSuccess: (importedCount: number) => void;
+	receivables: (Receivable & { client: Client })[];
 }
 
 // Shanaka (Start)
@@ -129,6 +130,7 @@ const columnMapping: { [key: string]: string } = {
 export default function CSVImportModal({
 	onClose,
 	onImportSuccess,
+	receivables,
 }: CSVImportModalProps) {
 	const [file, setFile] = useState<File | null>(null);
 	const [data, setData] = useState<any[]>([]);
@@ -848,6 +850,33 @@ export default function CSVImportModal({
 						.in('id', clientIds);
 				} catch (err) {
 					console.error('Erreur lors de la mise à jour des clients:', err);
+				}
+			}
+			// Delete lines that were not in the csv
+			const prevItems = new Set(
+				receivablesToImport.map(
+					(item) => `${item.owner_id}-${item.invoice_number}`
+				)
+			);
+
+			const missingReceivables = receivables.filter(
+				(item) => !prevItems.has(`${item.owner_id}-${item.invoice_number}`)
+			);
+
+			if (missingReceivables.length > 0) {
+				try {
+					await supabase
+						.from('receivables')
+						.delete()
+						.in(
+							'id',
+							missingReceivables.map((item) => item.id)
+						);
+				} catch (err) {
+					console.error(
+						'Erreur lors de la suppression des créances manquantes:',
+						err
+					);
 				}
 			}
 
