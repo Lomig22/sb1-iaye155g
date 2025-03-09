@@ -316,6 +316,7 @@ export default function CSVImportModal({
 		const exactMatch = clients.find(
 			(c) => c.company_name.toLowerCase().trim() === clientKey
 		);
+		console.log('exactMatch', exactMatch, clients, clientKey);
 		// Shanaka (Finish)
 
 		if (exactMatch) {
@@ -791,6 +792,7 @@ export default function CSVImportModal({
 							due_date: dueDate,
 							installment_number: installmentNumber,
 							status,
+							owner_id: user.id,
 							created_at: new Date().toISOString(),
 							updated_at: new Date().toISOString(),
 						});
@@ -816,7 +818,7 @@ export default function CSVImportModal({
 						.upsert(batch, {
 							//Shanaka(Start)
 							// Removed the extra on conflict statement
-							onConflict: 'client_id, invoice_number',
+							onConflict: 'owner_id, invoice_number',
 							//Shanaka(Finish)
 							ignoreDuplicates: false,
 						});
