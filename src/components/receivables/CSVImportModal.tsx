@@ -854,7 +854,9 @@ export default function CSVImportModal({
 			}
 			// Delete lines that were not in the csv
 			const prevItems = new Set(
-				receivables.map((item) => `${item.owner_id}-${item.invoice_number}`)
+				receivablesToImport.map(
+					(item) => `${item.owner_id}-${item.invoice_number}`
+				)
 			);
 
 			const missingReceivables = receivables.filter(
