@@ -127,7 +127,6 @@ export default function Auth({ onClose }: AuthProps) {
 		setMessage(null);
 
 		try {
-			console.log('location', window.location.origin);
 			const { error } = await supabase.auth.resetPasswordForEmail(email, {
 				redirectTo: `${window.location.origin}/?type=recovery`,
 			});
