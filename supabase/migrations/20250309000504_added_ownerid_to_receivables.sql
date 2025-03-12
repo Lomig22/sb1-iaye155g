@@ -9,7 +9,7 @@ BEGIN
     AND column_name = 'owner_id'
   ) THEN
     ALTER TABLE receivables ADD COLUMN owner_id uuid REFERENCES profiles(id) NOT NULL;
-    ALTER TABLE receivables ADD CONSTRAINT receivables_owner_invoice_uniq UNIQUE (invoice_number, owner_id)
+    ALTER TABLE receivables ADD CONSTRAINT receivables_owner_invoice_uniq UNIQUE (invoice_number, owner_id);
   END IF;
 
 END $$;
