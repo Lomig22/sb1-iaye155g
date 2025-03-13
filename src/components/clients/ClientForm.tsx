@@ -135,7 +135,7 @@ export default function ClientForm({
 						</div>
 						<div>
 							<label className='block text-sm font-medium text-gray-700 mb-2'>
-								Client Code *
+								Code Client *
 							</label>
 							<input
 								type='text'

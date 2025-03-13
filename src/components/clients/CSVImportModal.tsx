@@ -73,7 +73,7 @@ export default function CSVImportModal({
 
 	const mappingFields: MappingField[] = [
 		{ field: 'company_name', label: "Nom de l'entreprise", required: true },
-		{ field: 'client_code', label: 'Client Code', required: true },
+		{ field: 'client_code', label: 'Code Client', required: true },
 		{ field: 'email', label: 'Email', required: true },
 		{ field: 'phone', label: 'Téléphone', required: false },
 		{ field: 'address', label: 'Adresse', required: false },
@@ -148,7 +148,12 @@ export default function CSVImportModal({
 					.from('profiles')
 					.select('client_mapping')
 					.eq('id', user.id);
-				if (savedMapping !== undefined && savedMapping !== null) {
+
+				if (
+					savedMapping !== null &&
+					savedMapping[0].client_mapping !== undefined &&
+					savedMapping[0].client_mapping !== null
+				) {
 					const decodedMapping = JSON.parse(savedMapping[0].client_mapping);
 
 					Object.entries(decodedMapping).forEach(([key, value]) => {
@@ -808,7 +813,7 @@ export default function CSVImportModal({
 												Entreprise
 											</th>
 											<th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-												Client Code
+												Code Client
 											</th>
 											<th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 												Email

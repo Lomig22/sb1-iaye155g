@@ -272,7 +272,11 @@ export default function CSVImportModal({
 			.from('profiles')
 			.select('receivables_mapping')
 			.eq('id', user.id);
-		if (savedMapping !== undefined && savedMapping !== null) {
+		if (
+			savedMapping !== null &&
+			savedMapping[0].receivables_mapping !== undefined &&
+			savedMapping[0].receivables_mapping !== null
+		) {
 			const decodedMapping = JSON.parse(savedMapping[0].receivables_mapping);
 
 			Object.entries(decodedMapping).forEach(([key, value]) => {
