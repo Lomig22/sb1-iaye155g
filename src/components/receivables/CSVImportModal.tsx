@@ -1,46 +1,80 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { supabase } from '../../lib/supabase';
-import { X, Upload, AlertCircle, Info } from 'lucide-react';
+import { X, Upload, AlertCircle, Info, Loader2 } from 'lucide-react';
 import { Receivable, Client } from '../../types/database';
 import Papa from 'papaparse';
+import { MappingField } from '../clients/CSVImportModal';
 
 interface CSVImportModalProps {
 	onClose: () => void;
 	onImportSuccess: (importedCount: number) => void;
 	receivables: (Receivable & { client: Client })[];
 }
+interface MappingField {
+	field: keyof CSVMapping;
+	label: string;
+	required: boolean;
+}
+
+interface CSVMapping {
+	client: string;
+	invoice_number: string;
+	amount: string;
+	paid_amount: string | null;
+	due_date: string;
+	status: string | null;
+	document_date: string | null;
+	installment_number: string | null;
+	management_number: string | null;
+	code: string | null;
+	created_at: string | null;
+	updated_at: string | null;
+}
+
+const mappingFields: MappingField[] = [
+	{ field: 'client', label: 'Client', required: true },
+	{ field: 'invoice_number', label: 'Facture', required: true },
+	{ field: 'amount', label: 'Montant', required: true },
+	{ field: 'paid_amount', label: 'Montant réglé', required: true },
+	{ field: 'due_date', label: "Date d'échéance", required: false },
+	{ field: 'status', label: 'Statut', required: false },
+	{ field: 'document_date', label: 'Date pièce', required: false },
+	{ field: 'installment_number', label: "Numéro d'échéance", required: false },
+	{ field: 'management_number', label: 'Numéro dans gestion', required: false },
+	{ field: 'code', label: 'Code', required: false },
+];
 
 // Shanaka (Start)
 const columnMapping: { [key: string]: string } = {
 	// Numéro de facture
-	invoice_number: 'facture',
-	'numéro de facture': 'facture',
-	'n° facture': 'facture',
-	'n°facture': 'facture',
-	'num facture': 'facture',
-	invoice: 'facture',
-	'invoice number': 'facture',
-	facture: 'facture',
-	'numero facture': 'facture',
-	numéro: 'facture',
-	ref: 'facture',
-	référence: 'facture',
-	reference: 'facture',
+	invoice_number: 'invoice_number',
+	'numéro de facture': 'invoice_number',
+	'n° facture': 'invoice_number',
+	'n°facture': 'invoice_number',
+	'num facture': 'invoice_number',
+	invoice: 'invoice_number',
+	'invoice number': 'invoice_number',
+	facture: 'invoice_number',
+	'numero facture': 'invoice_number',
+	numéro: 'invoice_number',
+	ref: 'invoice_number',
+	référence: 'invoice_number',
+	reference: 'invoice_number',
 
 	// Numéro dans gestion
-	'n° gestion': 'facture',
-	'n° dans gestion': 'facture',
-	'n°gestion': 'facture',
-	'num gestion': 'facture',
-	'numéro gestion': 'facture',
-	'numero gestion': 'facture',
-	'ref gestion': 'facture',
-	'référence gestion': 'facture',
-	'reference gestion': 'facture',
-	'management number': 'facture',
-	management_number: 'facture',
-	'internal ref': 'facture',
-	'internal reference': 'facture',
+	'n° gestion': 'management_number',
+	'n° dans gestion': 'management_number',
+	'n°gestion': 'management_number',
+	'num gestion': 'management_number',
+	'numéro gestion': 'management_number',
+	'numero gestion': 'management_number',
+	'ref gestion': 'management_number',
+	'référence gestion': 'management_number',
+	'reference gestion': 'management_number',
+	'management number': 'management_number',
+	management_number: 'management_number',
+	'internal ref': 'management_number',
+	'internal reference': 'management_number',
 	// Code
 	code: 'code',
 	'code facture': 'code',
@@ -51,15 +85,16 @@ const columnMapping: { [key: string]: string } = {
 	'ref code': 'code',
 
 	// Montant
-	montant: 'montant devise',
-	'montant ht': 'montant devise',
-	'montant ttc': 'montant devise',
-	'montant devise': 'montant devise',
-	prix: 'montant devise',
-	total: 'montant devise',
-	price: 'montant devise',
-	'total amount': 'montant devise',
-	somme: 'montant devise',
+	montant: 'amount',
+	'montant ht': 'amount',
+	'montant ttc': 'amount',
+	'montant devise': 'amount',
+	prix: 'amount',
+	total: 'amount',
+	price: 'amount',
+	'total amount': 'amount',
+	amount: 'amount',
+	somme: 'amount',
 
 	// Montant réglé
 	'montant réglé': 'paid_amount',
@@ -75,24 +110,25 @@ const columnMapping: { [key: string]: string } = {
 	payment: 'paid_amount',
 
 	// Date d'échéance
-	"date d'échéance": 'échéance',
-	'date echéance': 'échéance',
-	"date d'echeance": 'échéance',
-	'date échéance': 'échéance',
-	'date echeance': 'échéance',
-	échéance: 'échéance',
-	echeance: 'échéance',
-	'due date': 'échéance',
-	deadline: 'échéance',
-	'date limite': 'échéance',
-	'date butoir': 'échéance',
+	"date d'échéance": 'due_date',
+	'date echéance': 'due_date',
+	"date d'echeance": 'due_date',
+	'date échéance': 'due_date',
+	'date echeance': 'due_date',
+	échéance: 'due_date',
+	echeance: 'due_date',
+	'due date': 'due_date',
+	due_date: 'due_date',
+	deadline: 'due_date',
+	'date limite': 'due_date',
+	'date butoir': 'due_date',
 
 	// Statut
-	status: 'statut',
-	état: 'statut',
-	etat: 'statut',
-	statut: 'statut',
-	state: 'statut',
+	status: 'status',
+	état: 'status',
+	etat: 'status',
+	statut: 'status',
+	state: 'status',
 
 	// Client
 	client: 'client',
@@ -110,21 +146,23 @@ const columnMapping: { [key: string]: string } = {
 	'nom (client)': 'client',
 
 	// Numéro d'échéance
-	'n° échéance': 'numéro échéance',
-	'n°échéance': 'numéro échéance',
-	'num échéance': 'numéro échéance',
-	'numéro échéance': 'numéro échéance',
-	'numero echeance': 'numéro échéance',
-	installment: 'numéro échéance',
-	'installment number': 'numéro échéance',
-	'payment number': 'numéro échéance',
-	'n° paiement': 'numéro échéance',
+	'n° échéance': 'installment_number',
+	'n°échéance': 'installment_number',
+	'num échéance': 'installment_number',
+	'numéro échéance': 'installment_number',
+	'numero echeance': 'installment_number',
+	installment: 'installment_number',
+	installment_number: 'installment_number',
+	'installment number': 'installment_number',
+	'payment number': 'installment_number',
+	'n° paiement': 'installment_number',
 
 	//Date pièce
-	'date pièce': 'date pièce',
+	'date pièce': 'document_date',
+	document_date: 'document_date',
 
 	//Montant Réglé Devise
-	'montant réglé devise': 'montant réglé devise',
+	'montant réglé devise': 'paid_amount',
 };
 // Shanaka (Finish)
 export default function CSVImportModal({
@@ -137,9 +175,9 @@ export default function CSVImportModal({
 	//Shanaka (Start)
 	const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
 	//Shanaka (Finish)
-	const [step, setStep] = useState<'upload' | 'preview' | 'importing'>(
-		'upload'
-	);
+	const [step, setStep] = useState<
+		'upload' | 'preview' | 'importing' | 'mapping'
+	>('upload');
 	const [error, setError] = useState<string | null>(null);
 	const [preview, setPreview] = useState<(Receivable & { client: Client })[]>(
 		[]
@@ -150,6 +188,8 @@ export default function CSVImportModal({
 	const [clientMap, setClientMap] = useState<Record<string, Client>>({});
 	const [newClients, setNewClients] = useState<Record<string, Client>>({});
 	const fileInputRef = useRef<HTMLInputElement>(null);
+	const [mapping, setMapping] = useState<Record<string, keyof CSVMapping>>({});
+	const [savingSchema, setSavingSchema] = useState(false);
 
 	// Colonnes attendues dans le CSV
 	const expectedHeaders = [
@@ -157,10 +197,6 @@ export default function CSVImportModal({
 		'Facture',
 		'Montant devise',
 		'Montant Réglé devise',
-		// 'Date pièce',
-		// 'Échéance',
-		// 'Numéro échéance',
-		// 'Statut',
 	];
 
 	// Désactiver le défilement du body quand la modale est ouverte
@@ -207,6 +243,68 @@ export default function CSVImportModal({
 		}
 	};
 
+	const handleMapping = async (header: string[]) => {
+		const headerMap = new Map(
+			header.map((item) => [columnMapping[item], true])
+		);
+		const missingHeaders: string[] = [];
+		for (const expected of expectedHeaders) {
+			if (!headerMap.has(columnMapping[expected.toLowerCase().trim()])) {
+				missingHeaders.push(expected);
+			}
+		}
+
+		if (missingHeaders.length > 0) {
+			setError(
+				`Le fichier CSV doit contenir une colonne "${missingHeaders.join(
+					','
+				)}" pour importer les données`
+			);
+			return;
+		}
+
+		const autoMapping: Record<string, keyof CSVMapping> = {};
+		const {
+			data: { user },
+		} = await supabase.auth.getUser();
+		if (!user) throw new Error('Utilisateur non authentifié');
+		const { data: savedMapping } = await supabase
+			.from('profiles')
+			.select('receivables_mapping')
+			.eq('id', user.id);
+		if (savedMapping !== undefined && savedMapping !== null) {
+			const decodedMapping = JSON.parse(savedMapping[0].receivables_mapping);
+
+			Object.entries(decodedMapping).forEach(([key, value]) => {
+				autoMapping[key] = value as keyof CSVMapping;
+			});
+		} else {
+			// columnMapping
+			for (const col of header) {
+				const mappedColumn = columnMapping[col.trim().toLowerCase()];
+				if (mappedColumn !== undefined && mappedColumn !== null) {
+					autoMapping[col.trim().toLowerCase()] =
+						mappedColumn as keyof CSVMapping;
+				}
+			}
+		}
+		setMapping(autoMapping);
+		setStep('mapping');
+	};
+
+	const handleMappingChange = (
+		header: string,
+		field: keyof CSVMapping | ''
+	) => {
+		if (field === '') {
+			const newMapping = { ...mapping };
+			delete newMapping[header];
+			setMapping(newMapping);
+		} else {
+			setMapping({ ...mapping, [header]: field });
+		}
+	};
+
 	const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const selectedFile = event.target.files?.[0];
 		if (!selectedFile) return;
@@ -220,30 +318,31 @@ export default function CSVImportModal({
 					const headers = result.data[0] as string[];
 					// Shanaka (Start)
 					const cleanedHeaders = headers.map((h) => {
-						return columnMapping[h.toLowerCase().trim()];
+						return h.toLowerCase().trim();
 					});
 					// Shanaka (Finish)
 					setCsvHeaders(cleanedHeaders);
 					// Vérification du format des colonnes
-					const missingHeaders = expectedHeaders.filter(
-						(header) =>
-							!cleanedHeaders.some((h) => {
-								return h.toLowerCase() === header.toLowerCase();
-							})
-					);
+					// const missingHeaders = expectedHeaders.filter(
+					// 	(header) =>
+					// 		!cleanedHeaders.some((h) => {
+					// 			return columnMapping[h].toLowerCase() === header.toLowerCase();
+					// 		})
+					// );
 
-					if (missingHeaders.length > 0) {
-						setError(
-							`Le format du fichier est incorrect. Colonnes manquantes: ${missingHeaders.join(
-								', '
-							)}`
-						);
-						return;
-					}
+					// if (missingHeaders.length > 0) {
+					// 	setError(
+					// 		`Le format du fichier est incorrect. Colonnes manquantes: ${missingHeaders.join(
+					// 			', '
+					// 		)}`
+					// 	);
+					// 	return;
+					// }
 
 					const rows = result.data.slice(1) as string[][];
 					setData(rows);
-					generatePreview(cleanedHeaders, rows);
+					//generatePreview(cleanedHeaders, rows);
+					handleMapping(cleanedHeaders);
 				}
 			},
 			header: false,
@@ -462,38 +561,31 @@ export default function CSVImportModal({
 		return 'pending';
 	};
 
-	const generatePreview = (headers: string[], rows: string[][]) => {
+	const generatePreview = () => {
 		try {
-			// Trouver les indices des colonnes
-			const clientIndex = headers.findIndex((h) =>
-				h.toLowerCase().includes('client')
-			);
-			const invoiceIndex = headers.findIndex((h) =>
-				h.toLowerCase().includes('facture')
-			);
-			const amountIndex = headers.findIndex(
-				(h) =>
-					h.toLowerCase().includes('montant') &&
-					!h.toLowerCase().includes('réglé')
-			);
-			const paidAmountIndex = headers.findIndex((h) =>
-				h.toLowerCase().includes('réglé')
-			);
-			const documentDateIndex = headers.findIndex((h) =>
-				h.toLowerCase().includes('pièce')
-			);
-			const dueDateIndex = headers.findIndex(
-				(h) =>
-					h.toLowerCase().includes('échéance') &&
-					!h.toLowerCase().includes('numéro')
-			);
-			const installmentNumberIndex = headers.findIndex((h) =>
-				h.toLowerCase().includes('numéro échéance')
-			);
-			const statusIndex = headers.findIndex((h) =>
-				h.toLowerCase().includes('statut')
-			);
+			// First check if the required fields are present
+			// SCV header has the header from the csv
+			// Mapping has the csv -> to db mapping
 
+			// Trouver les indices des colonnes
+			const clientIndex = csvHeaders.findIndex((h) => mapping[h] === 'client');
+			const invoiceIndex = csvHeaders.findIndex(
+				(h) => mapping[h] === 'invoice_number'
+			);
+			const amountIndex = csvHeaders.findIndex((h) => mapping[h] === 'amount');
+			const paidAmountIndex = csvHeaders.findIndex(
+				(h) => mapping[h] === 'paid_amount'
+			);
+			const documentDateIndex = csvHeaders.findIndex(
+				(h) => mapping[h] === 'document_date'
+			);
+			const dueDateIndex = csvHeaders.findIndex(
+				(h) => mapping[h] === 'due_date'
+			);
+			const installmentNumberIndex = csvHeaders.findIndex(
+				(h) => mapping[h] === 'installment_number'
+			);
+			const statusIndex = csvHeaders.findIndex((h) => mapping[h] === 'status');
 			if (
 				clientIndex === -1 ||
 				invoiceIndex === -1 ||
@@ -503,11 +595,9 @@ export default function CSVImportModal({
 				setError('Colonnes obligatoires manquantes dans le fichier CSV');
 				return;
 			}
-
 			// Réinitialiser les nouveaux clients
 			const newClientsMap: Record<string, Client> = {};
-
-			const previewData: (Receivable & { client: Client })[] = rows
+			const previewData: (Receivable & { client: Client })[] = data
 				.slice(0, 5)
 				.map((row, index) => {
 					// Récupérer les valeurs des colonnes
@@ -524,7 +614,6 @@ export default function CSVImportModal({
 					const installmentNumber =
 						installmentNumberIndex !== -1 ? row[installmentNumberIndex] : null;
 					const statusStr = statusIndex !== -1 ? row[statusIndex] : '';
-
 					// Nettoyer et convertir les valeurs
 					const amount =
 						parseFloat(amountStr.replace(/[^\d.,]/g, '').replace(',', '.')) ||
@@ -537,12 +626,10 @@ export default function CSVImportModal({
 					const dueDate =
 						formatDate(dueDateStr) || new Date().toISOString().split('T')[0];
 					const status = mapStatus(statusStr);
-
 					// Trouver le client correspondant
 					const clientId = getClientId(clientName);
 					//shanaka (Start)
 					// Check if the client is already in the new clients map
-
 					const client = clientId
 						? clientMap[clientId]
 						: newClientsMap[`new-${clientName}`] ?? null;
@@ -551,7 +638,6 @@ export default function CSVImportModal({
 					if (!client) {
 						// Générer un ID temporaire pour le nouveau client
 						const tempId = `new-${clientName}`;
-
 						// Créer un nouveau client avec le nom fourni
 						const newClient: Client = {
 							id: tempId,
@@ -564,10 +650,8 @@ export default function CSVImportModal({
 							updated_at: new Date().toISOString(),
 							owner_id: '', // Sera rempli lors de l'import
 						};
-
 						// Ajouter au map des nouveaux clients
 						newClientsMap[tempId] = newClient;
-
 						return {
 							id: `preview-${index}`,
 							client_id: tempId,
@@ -583,7 +667,6 @@ export default function CSVImportModal({
 							client: newClient,
 						} as Receivable & { client: Client };
 					}
-
 					return {
 						id: `preview-${index}`,
 						client_id: client.id,
@@ -599,7 +682,6 @@ export default function CSVImportModal({
 						client: client,
 					} as Receivable & { client: Client };
 				});
-
 			setNewClients(newClientsMap);
 			setPreview(previewData);
 			setStep('preview');
@@ -624,34 +706,24 @@ export default function CSVImportModal({
 			// Trouver les indices des colonnes
 			//Shanaka (Start)
 			// Replaced the const header , with csvHeader from the state
-			const clientIndex = csvHeaders.findIndex((h) =>
-				h.toLowerCase().includes('client')
+			const clientIndex = csvHeaders.findIndex((h) => mapping[h] === 'client');
+			const invoiceIndex = csvHeaders.findIndex(
+				(h) => mapping[h] === 'invoice_number'
 			);
-			const invoiceIndex = csvHeaders.findIndex((h) =>
-				h.toLowerCase().includes('facture')
+			const amountIndex = csvHeaders.findIndex((h) => mapping[h] === 'amount');
+			const paidAmountIndex = csvHeaders.findIndex(
+				(h) => mapping[h] === 'paid_amount'
 			);
-			const amountIndex = csvHeaders.findIndex(
-				(h) =>
-					h.toLowerCase().includes('montant') &&
-					!h.toLowerCase().includes('réglé')
-			);
-			const paidAmountIndex = csvHeaders.findIndex((h) =>
-				h.toLowerCase().includes('réglé')
-			);
-			const documentDateIndex = csvHeaders.findIndex((h) =>
-				h.toLowerCase().includes('pièce')
+			const documentDateIndex = csvHeaders.findIndex(
+				(h) => mapping[h] === 'document_date'
 			);
 			const dueDateIndex = csvHeaders.findIndex(
-				(h) =>
-					h.toLowerCase().includes('échéance') &&
-					!h.toLowerCase().includes('numéro')
+				(h) => mapping[h] === 'due_date'
 			);
-			const installmentNumberIndex = csvHeaders.findIndex((h) =>
-				h.toLowerCase().includes('numéro échéance')
+			const installmentNumberIndex = csvHeaders.findIndex(
+				(h) => mapping[h] === 'installment_number'
 			);
-			const statusIndex = csvHeaders.findIndex((h) =>
-				h.toLowerCase().includes('statut')
-			);
+			const statusIndex = csvHeaders.findIndex((h) => mapping[h] === 'status');
 			//Shanaka (Finish)
 			// Créer d'abord les nouveaux clients
 			const createdClients: Record<string, string> = {}; // Map des IDs temporaires vers les vrais IDs
@@ -894,6 +966,28 @@ export default function CSVImportModal({
 		}
 	};
 
+	const saveMapping = async () => {
+		const {
+			data: { user },
+		} = await supabase.auth.getUser();
+		if (!user) throw new Error('Utilisateur non authentifié');
+
+		try {
+			setSavingSchema(true);
+			await supabase
+				.from('profiles')
+				.update({ receivables_mapping: JSON.stringify(mapping) })
+				.eq('id', user.id);
+			setSavingSchema(false);
+		} catch (err) {
+			console.error(
+				'Erreur lors de la suppression des créances manquantes:',
+				err
+			);
+			setSavingSchema(false);
+		}
+	};
+
 	const resetForm = () => {
 		setFile(null);
 		setData([]);
@@ -982,6 +1076,138 @@ export default function CSVImportModal({
 											l'import.
 										</p>
 									</div>
+								</div>
+							</div>
+						</div>
+					)}
+					{step === 'mapping' && (
+						<div className='space-y-6'>
+							<div className='flex justify-between items-center'>
+								<p className='text-gray-600'>
+									Fichier : <span className='font-medium'>{file?.name}</span>
+								</p>
+								<button
+									onClick={resetForm}
+									className='text-blue-600 hover:text-blue-800 text-sm'
+								>
+									Changer de fichier
+								</button>
+							</div>
+
+							<div className='bg-gray-50 p-4 rounded-md mb-4'>
+								{/* <div className='flex justify-between items-center mb-2'>
+									<h3 className='font-medium'>Correspondance des colonnes</h3>
+									<button
+										onClick={() => setShowHelp(!showHelp)}
+										className='text-blue-600 hover:text-blue-800 flex items-center text-sm'
+									>
+										<HelpCircle className='h-4 w-4 mr-1' />
+										{showHelp ? "Masquer l'aide" : "Afficher l'aide"}
+									</button>
+								</div>
+
+								{showHelp && (
+									<div className='bg-blue-50 p-3 rounded-md mb-4 text-sm text-blue-700'>
+										<p className='mb-2'>
+											<span className='font-medium'>
+												Correspondance des colonnes :
+											</span>{' '}
+											Associez chaque colonne de votre fichier CSV à un champ
+											dans notre système.
+										</p>
+										<ul className='list-disc pl-5 space-y-1'>
+											<li>
+												<span className='font-medium'>
+													Nom de l'entreprise et Email
+												</span>{' '}
+												sont obligatoires.
+											</li>
+											<li>
+												Pour le champ{' '}
+												<span className='font-medium'>
+													Nécessite une relance
+												</span>
+												, les valeurs acceptées sont : "Oui", "OUI", "Yes", "1",
+												"True", "Relance en cours".
+											</li>
+											<li>
+												Pour les champs{' '}
+												<span className='font-medium'>Créé le</span> et{' '}
+												<span className='font-medium'>Mis à jour</span>,
+												plusieurs formats de date sont acceptés.
+											</li>
+											<li>
+												Les colonnes non mappées seront ignorées lors de
+												l'import.
+											</li>
+										</ul>
+									</div>
+								)} */}
+
+								<div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+									{csvHeaders.map((header, index) => (
+										<div key={index} className='flex items-center space-x-2'>
+											<div
+												className='w-1/2 font-medium truncate'
+												title={header}
+											>
+												{header}
+											</div>
+											<select
+												value={mapping[header] || ''}
+												onChange={(e) =>
+													handleMappingChange(
+														header,
+														e.target.value as keyof CSVMapping | ''
+													)
+												}
+												disabled={savingSchema}
+												className='w-1/2 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+											>
+												<option value=''>Ne pas importer</option>
+												{mappingFields.map((field) => (
+													<option
+														key={field.field}
+														value={field.field}
+														disabled={
+															Object.values(mapping).includes(field.field) &&
+															mapping[header] !== field.field
+														}
+													>
+														{field.label}
+														{field.required ? ' *' : ''}
+													</option>
+												))}
+											</select>
+										</div>
+									))}
+								</div>
+							</div>
+
+							<div className='flex justify-between space-x-4'>
+								<button
+									onClick={saveMapping}
+									className='px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors flex'
+									disabled={savingSchema}
+								>
+									{savingSchema && <Loader2 className='animate-spin' />}
+									Save Mapping
+								</button>
+								<div className='flex gap-4'>
+									<button
+										onClick={resetForm}
+										disabled={savingSchema}
+										className='px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors'
+									>
+										Annuler
+									</button>
+									<button
+										onClick={generatePreview}
+										disabled={savingSchema}
+										className='px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors'
+									>
+										Aperçu
+									</button>
 								</div>
 							</div>
 						</div>
