@@ -262,15 +262,7 @@ export default function CSVImportModal({
 			);
 			return;
 		}
-		// Check if expected columns exist
-		// for (const expected of expectedHeaders) {
-		// 	if (!header.includes(expected)) {
-		// 		setError(
-		// 			`Le fichier CSV doit contenir une colonne "${expected}" pour importer les données`
-		// 		);
-		// 		return;
-		// 	}
-		// }
+
 		const autoMapping: Record<string, keyof CSVMapping> = {};
 		const {
 			data: { user },

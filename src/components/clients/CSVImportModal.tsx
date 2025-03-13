@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { X, Upload, AlertCircle, HelpCircle } from 'lucide-react';
+import { X, Upload, AlertCircle, HelpCircle, Loader2 } from 'lucide-react';
 import { Client } from '../../types/database';
 
 interface CSVImportModalProps {
@@ -69,6 +69,7 @@ export default function CSVImportModal({
 	const [importedCount, setImportedCount] = useState(0);
 	const [showHelp, setShowHelp] = useState(false);
 	const fileInputRef = useRef<HTMLInputElement>(null);
+	const [savingSchema, setSavingSchema] = useState(false);
 
 	const mappingFields: MappingField[] = [
 		{ field: 'company_name', label: "Nom de l'entreprise", required: true },
@@ -120,7 +121,7 @@ export default function CSVImportModal({
 		setError(null);
 
 		const reader = new FileReader();
-		reader.onload = (event) => {
+		reader.onload = async (event) => {
 			try {
 				const text = event.target?.result as string;
 				const parsedData = parseCSV(text);
@@ -138,164 +139,182 @@ export default function CSVImportModal({
 
 				// Tentative de mapping automatique
 				const autoMapping: Record<string, keyof CSVMapping> = {};
-				const headerLower = csvHeaders.map((h) => h.toLowerCase());
+				// Check if saved config exists
+				const {
+					data: { user },
+				} = await supabase.auth.getUser();
+				if (!user) throw new Error('Utilisateur non authentifié');
+				const { data: savedMapping } = await supabase
+					.from('profiles')
+					.select('client_mapping')
+					.eq('id', user.id);
+				if (savedMapping !== undefined && savedMapping !== null) {
+					const decodedMapping = JSON.parse(savedMapping[0].client_mapping);
 
-				// Mapping pour le nom de l'entreprise
-				const companyNameVariants = [
-					'entreprise',
-					'société',
-					'company',
-					'nom',
-					'raison sociale',
-					'client',
-				];
-				for (const variant of companyNameVariants) {
-					const index = headerLower.findIndex((h) => h.includes(variant));
+					Object.entries(decodedMapping).forEach(([key, value]) => {
+						autoMapping[key] = value as keyof CSVMapping;
+					});
+				} else {
+					const headerLower = csvHeaders.map((h) => h.toLowerCase());
+
+					// Mapping pour le nom de l'entreprise
+					const companyNameVariants = [
+						'entreprise',
+						'société',
+						'company',
+						'nom',
+						'raison sociale',
+						'client',
+					];
+					for (const variant of companyNameVariants) {
+						const index = headerLower.findIndex((h) => h.includes(variant));
+						if (index !== -1) {
+							autoMapping[csvHeaders[index]] = 'company_name';
+							break;
+						}
+					}
+
+					// Mapping pour l'email
+					const emailVariants = ['email', 'e-mail', 'courriel', 'mail'];
+					for (const variant of emailVariants) {
+						const index = headerLower.findIndex((h) => h.includes(variant));
+						if (index !== -1) {
+							autoMapping[csvHeaders[index]] = 'email';
+							break;
+						}
+					}
+
+					// Mapping pour le téléphone
+					const phoneVariants = [
+						'téléphone',
+						'telephone',
+						'phone',
+						'tel',
+						'mobile',
+					];
+					for (const variant of phoneVariants) {
+						const index = headerLower.findIndex((h) => h.includes(variant));
+						if (index !== -1) {
+							autoMapping[csvHeaders[index]] = 'phone';
+							break;
+						}
+					}
+
+					// Mapping pour l'adresse
+					const addressVariants = ['adresse', 'address', 'rue'];
+					for (const variant of addressVariants) {
+						const index = headerLower.findIndex((h) => h.includes(variant));
+						if (index !== -1) {
+							autoMapping[csvHeaders[index]] = 'address';
+							break;
+						}
+					}
+
+					// Mapping pour la ville
+					const cityVariants = ['ville', 'city', 'commune', 'localité'];
+					for (const variant of cityVariants) {
+						const index = headerLower.findIndex((h) => h.includes(variant));
+						if (index !== -1) {
+							autoMapping[csvHeaders[index]] = 'city';
+							break;
+						}
+					}
+
+					// Mapping pour le code postal
+					const postalCodeVariants = ['code postal', 'cp', 'postal', 'zip'];
+					for (const variant of postalCodeVariants) {
+						const index = headerLower.findIndex((h) => h.includes(variant));
+						if (index !== -1) {
+							autoMapping[csvHeaders[index]] = 'postal_code';
+							break;
+						}
+					}
+
+					// Mapping pour le pays
+					const countryVariants = ['pays', 'country', 'nation'];
+					for (const variant of countryVariants) {
+						const index = headerLower.findIndex((h) => h.includes(variant));
+						if (index !== -1) {
+							autoMapping[csvHeaders[index]] = 'country';
+							break;
+						}
+					}
+
+					// Mapping pour le secteur d'activité
+					const industryVariants = [
+						'secteur',
+						'activité',
+						'industry',
+						'business',
+					];
+					for (const variant of industryVariants) {
+						const index = headerLower.findIndex((h) => h.includes(variant));
+						if (index !== -1) {
+							autoMapping[csvHeaders[index]] = 'industry';
+							break;
+						}
+					}
+
+					// Mapping pour le site web
+					const websiteVariants = ['site', 'web', 'website', 'url'];
+					for (const variant of websiteVariants) {
+						const index = headerLower.findIndex((h) => h.includes(variant));
+						if (index !== -1) {
+							autoMapping[csvHeaders[index]] = 'website';
+							break;
+						}
+					}
+
+					// Mapping pour la relance
+					const reminderVariants = ['relance', 'reminder', 'rappel', 'suivi'];
+					for (const variant of reminderVariants) {
+						const index = headerLower.findIndex((h) => h.includes(variant));
+						if (index !== -1) {
+							autoMapping[csvHeaders[index]] = 'needs_reminder';
+							break;
+						}
+					}
+
+					// Mapping pour la date de création
+					const createdAtVariants = [
+						'créé le',
+						'crée le',
+						'cree le',
+						'created at',
+						'date de création',
+						'date creation',
+					];
+					for (const variant of createdAtVariants) {
+						const index = headerLower.findIndex((h) => h.includes(variant));
+						if (index !== -1) {
+							autoMapping[csvHeaders[index]] = 'created_at';
+							break;
+						}
+					}
+
+					// Mapping pour la date de mise à jour
+					const updatedAtVariants = [
+						'mis à jour',
+						'mise à jour',
+						'updated at',
+						'date de modification',
+						'modifié le',
+					];
+					for (const variant of updatedAtVariants) {
+						const index = headerLower.findIndex((h) => h.includes(variant));
+						if (index !== -1) {
+							autoMapping[csvHeaders[index]] = 'updated_at';
+							break;
+						}
+					}
+
+					// Mapping for client code
+					const index = headerLower.findIndex((h) => h.includes('client code'));
 					if (index !== -1) {
-						autoMapping[csvHeaders[index]] = 'company_name';
-						break;
+						autoMapping[csvHeaders[index]] = 'client_code';
 					}
 				}
 
-				// Mapping pour l'email
-				const emailVariants = ['email', 'e-mail', 'courriel', 'mail'];
-				for (const variant of emailVariants) {
-					const index = headerLower.findIndex((h) => h.includes(variant));
-					if (index !== -1) {
-						autoMapping[csvHeaders[index]] = 'email';
-						break;
-					}
-				}
-
-				// Mapping pour le téléphone
-				const phoneVariants = [
-					'téléphone',
-					'telephone',
-					'phone',
-					'tel',
-					'mobile',
-				];
-				for (const variant of phoneVariants) {
-					const index = headerLower.findIndex((h) => h.includes(variant));
-					if (index !== -1) {
-						autoMapping[csvHeaders[index]] = 'phone';
-						break;
-					}
-				}
-
-				// Mapping pour l'adresse
-				const addressVariants = ['adresse', 'address', 'rue'];
-				for (const variant of addressVariants) {
-					const index = headerLower.findIndex((h) => h.includes(variant));
-					if (index !== -1) {
-						autoMapping[csvHeaders[index]] = 'address';
-						break;
-					}
-				}
-
-				// Mapping pour la ville
-				const cityVariants = ['ville', 'city', 'commune', 'localité'];
-				for (const variant of cityVariants) {
-					const index = headerLower.findIndex((h) => h.includes(variant));
-					if (index !== -1) {
-						autoMapping[csvHeaders[index]] = 'city';
-						break;
-					}
-				}
-
-				// Mapping pour le code postal
-				const postalCodeVariants = ['code postal', 'cp', 'postal', 'zip'];
-				for (const variant of postalCodeVariants) {
-					const index = headerLower.findIndex((h) => h.includes(variant));
-					if (index !== -1) {
-						autoMapping[csvHeaders[index]] = 'postal_code';
-						break;
-					}
-				}
-
-				// Mapping pour le pays
-				const countryVariants = ['pays', 'country', 'nation'];
-				for (const variant of countryVariants) {
-					const index = headerLower.findIndex((h) => h.includes(variant));
-					if (index !== -1) {
-						autoMapping[csvHeaders[index]] = 'country';
-						break;
-					}
-				}
-
-				// Mapping pour le secteur d'activité
-				const industryVariants = [
-					'secteur',
-					'activité',
-					'industry',
-					'business',
-				];
-				for (const variant of industryVariants) {
-					const index = headerLower.findIndex((h) => h.includes(variant));
-					if (index !== -1) {
-						autoMapping[csvHeaders[index]] = 'industry';
-						break;
-					}
-				}
-
-				// Mapping pour le site web
-				const websiteVariants = ['site', 'web', 'website', 'url'];
-				for (const variant of websiteVariants) {
-					const index = headerLower.findIndex((h) => h.includes(variant));
-					if (index !== -1) {
-						autoMapping[csvHeaders[index]] = 'website';
-						break;
-					}
-				}
-
-				// Mapping pour la relance
-				const reminderVariants = ['relance', 'reminder', 'rappel', 'suivi'];
-				for (const variant of reminderVariants) {
-					const index = headerLower.findIndex((h) => h.includes(variant));
-					if (index !== -1) {
-						autoMapping[csvHeaders[index]] = 'needs_reminder';
-						break;
-					}
-				}
-
-				// Mapping pour la date de création
-				const createdAtVariants = [
-					'créé le',
-					'crée le',
-					'cree le',
-					'created at',
-					'date de création',
-					'date creation',
-				];
-				for (const variant of createdAtVariants) {
-					const index = headerLower.findIndex((h) => h.includes(variant));
-					if (index !== -1) {
-						autoMapping[csvHeaders[index]] = 'created_at';
-						break;
-					}
-				}
-
-				// Mapping pour la date de mise à jour
-				const updatedAtVariants = [
-					'mis à jour',
-					'mise à jour',
-					'updated at',
-					'date de modification',
-					'modifié le',
-				];
-				for (const variant of updatedAtVariants) {
-					const index = headerLower.findIndex((h) => h.includes(variant));
-					if (index !== -1) {
-						autoMapping[csvHeaders[index]] = 'updated_at';
-						break;
-					}
-				}
-
-				// Mapping for client code
-				const index = headerLower.findIndex((h) => h.includes('client code'));
-				if (index !== -1) {
-					autoMapping[csvHeaders[index]] = 'client_code';
-				}
 				setMapping(autoMapping);
 				setStep('mapping');
 			} catch (error) {
@@ -537,6 +556,28 @@ export default function CSVImportModal({
 		}
 	};
 
+	const saveMapping = async () => {
+		const {
+			data: { user },
+		} = await supabase.auth.getUser();
+		if (!user) throw new Error('Utilisateur non authentifié');
+
+		try {
+			setSavingSchema(true);
+			await supabase
+				.from('profiles')
+				.update({ client_mapping: JSON.stringify(mapping) })
+				.eq('id', user.id);
+			setSavingSchema(false);
+		} catch (err) {
+			console.error(
+				'Erreur lors de la suppression des créances manquantes:',
+				err
+			);
+			setSavingSchema(false);
+		}
+	};
+
 	const resetForm = () => {
 		setFile(null);
 		setCsvData([]);
@@ -718,19 +759,29 @@ export default function CSVImportModal({
 								</div>
 							</div>
 
-							<div className='flex justify-end space-x-4'>
+							<div className='flex justify-between space-x-4'>
 								<button
-									onClick={resetForm}
-									className='px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors'
+									onClick={saveMapping}
+									className='px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors flex'
+									disabled={savingSchema}
 								>
-									Annuler
+									{savingSchema && <Loader2 className='animate-spin' />}
+									Save Mapping
 								</button>
-								<button
-									onClick={generatePreview}
-									className='px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors'
-								>
-									Aperçu
-								</button>
+								<div className='flex space-x-4'>
+									<button
+										onClick={resetForm}
+										className='px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors'
+									>
+										Annuler
+									</button>
+									<button
+										onClick={generatePreview}
+										className='px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors'
+									>
+										Aperçu
+									</button>
+								</div>
 							</div>
 						</div>
 					)}
