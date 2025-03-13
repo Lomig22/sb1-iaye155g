@@ -22,6 +22,7 @@ export interface Client {
 	updated_at: string;
 	owner_id: string;
 	client_code: string;
+	notes?: string;
 }
 
 export interface Receivable {
@@ -40,6 +41,7 @@ export interface Receivable {
 	owner_id: string;
 	created_at: string;
 	updated_at: string;
+	notes?: string;
 }
 
 export interface Reminder {

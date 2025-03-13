@@ -32,6 +32,7 @@ export default function ClientForm({
 		website: client?.website || '',
 		needs_reminder: client?.needs_reminder || false,
 		client_code: client?.client_code || '',
+		notes: client?.notes || '',
 	});
 
 	useEffect(() => {
@@ -219,7 +220,6 @@ export default function ClientForm({
 								/>
 							</div>
 						</div>
-
 						<div>
 							<label className='block text-sm font-medium text-gray-700 mb-2'>
 								Pays
@@ -262,7 +262,19 @@ export default function ClientForm({
 								placeholder='https://...'
 							/>
 						</div>
-
+						<div>
+							<label className='block text-sm font-medium text-gray-700 mb-2'>
+								Commentaire
+							</label>
+							<input
+								type='text'
+								value={formData.notes}
+								onChange={(e) =>
+									setFormData({ ...formData, notes: e.target.value })
+								}
+								className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+							/>
+						</div>
 						<div className='flex items-center'>
 							<input
 								type='checkbox'
