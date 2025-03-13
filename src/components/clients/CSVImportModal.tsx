@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { X, Upload, AlertCircle, Check, HelpCircle } from 'lucide-react';
+import { X, Upload, AlertCircle, HelpCircle } from 'lucide-react';
 import { Client } from '../../types/database';
 
 interface CSVImportModalProps {
@@ -296,51 +296,6 @@ export default function CSVImportModal({
 				if (index !== -1) {
 					autoMapping[csvHeaders[index]] = 'client_code';
 				}
-
-				// Si les en-têtes sont exactement dans l'ordre demandé, faire le mapping automatiquement
-				if (headerLower.length >= 2) {
-					// const expectedOrder = [
-					// 	'company_name',
-					// 	'client_code',
-					// 	'email',
-					// 	'telephone',
-					// 	'adresse',
-					// 	'ville',
-					// 	'code postal',
-					// 	'pays',
-					// 	'secteur',
-					// 	'site web',
-					// 	'crée le',
-					// 	'mis à jour',
-					// 	'relance',
-					// ];
-					// // Vérifier si les en-têtes correspondent à l'ordre attendu
-					// let matchesExpectedOrder = true;
-					// const fields: (keyof CSVMapping)[] = [
-					// 	'company_name',
-					// 	'client_code',
-					// 	'email',
-					// 	'phone',
-					// 	'address',
-					// 	'city',
-					// 	'postal_code',
-					// 	'country',
-					// 	'industry',
-					// 	'website',
-					// 	'created_at',
-					// 	'updated_at',
-					// 	'needs_reminder',
-					// ];
-					// // Mapper automatiquement selon l'ordre des colonnes
-					// for (
-					// 	let i = 0;
-					// 	i < Math.min(headerLower.length, fields.length);
-					// 	i++
-					// ) {
-					// 	autoMapping[csvHeaders[i]] = fields[i];
-					// }
-				}
-
 				setMapping(autoMapping);
 				setStep('mapping');
 			} catch (error) {
