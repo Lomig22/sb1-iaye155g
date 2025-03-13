@@ -72,6 +72,7 @@ export default function CSVImportModal({
 
 	const mappingFields: MappingField[] = [
 		{ field: 'company_name', label: "Nom de l'entreprise", required: true },
+		{ field: 'client_code', label: 'Client Code', required: true },
 		{ field: 'email', label: 'Email', required: true },
 		{ field: 'phone', label: 'Téléphone', required: false },
 		{ field: 'address', label: 'Adresse', required: false },
@@ -299,8 +300,8 @@ export default function CSVImportModal({
 				// Si les en-têtes sont exactement dans l'ordre demandé, faire le mapping automatiquement
 				if (headerLower.length >= 2) {
 					// const expectedOrder = [
-					// 	'entreprise',
-					// 	'client code',
+					// 	'company_name',
+					// 	'client_code',
 					// 	'email',
 					// 	'telephone',
 					// 	'adresse',
@@ -313,33 +314,31 @@ export default function CSVImportModal({
 					// 	'mis à jour',
 					// 	'relance',
 					// ];
-
 					// // Vérifier si les en-têtes correspondent à l'ordre attendu
 					// let matchesExpectedOrder = true;
-					const fields: (keyof CSVMapping)[] = [
-						'company_name',
-						'client_code',
-						'email',
-						'phone',
-						'address',
-						'city',
-						'postal_code',
-						'country',
-						'industry',
-						'website',
-						'created_at',
-						'updated_at',
-						'needs_reminder',
-					];
-
-					// Mapper automatiquement selon l'ordre des colonnes
-					for (
-						let i = 0;
-						i < Math.min(headerLower.length, fields.length);
-						i++
-					) {
-						autoMapping[csvHeaders[i]] = fields[i];
-					}
+					// const fields: (keyof CSVMapping)[] = [
+					// 	'company_name',
+					// 	'client_code',
+					// 	'email',
+					// 	'phone',
+					// 	'address',
+					// 	'city',
+					// 	'postal_code',
+					// 	'country',
+					// 	'industry',
+					// 	'website',
+					// 	'created_at',
+					// 	'updated_at',
+					// 	'needs_reminder',
+					// ];
+					// // Mapper automatiquement selon l'ordre des colonnes
+					// for (
+					// 	let i = 0;
+					// 	i < Math.min(headerLower.length, fields.length);
+					// 	i++
+					// ) {
+					// 	autoMapping[csvHeaders[i]] = fields[i];
+					// }
 				}
 
 				setMapping(autoMapping);
@@ -595,7 +594,6 @@ export default function CSVImportModal({
 			fileInputRef.current.value = '';
 		}
 	};
-
 	return (
 		<div className='fixed inset-0 bg-gray-600 bg-opacity-50 z-50 overflow-y-auto'>
 			<div className='min-h-screen py-8 px-4 flex items-center justify-center'>
@@ -804,6 +802,9 @@ export default function CSVImportModal({
 												Entreprise
 											</th>
 											<th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+												Client Code
+											</th>
+											<th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 												Email
 											</th>
 											<th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
@@ -837,6 +838,9 @@ export default function CSVImportModal({
 											<tr key={index}>
 												<td className='px-4 py-3 whitespace-nowrap text-sm text-gray-900'>
 													{client.company_name}
+												</td>
+												<td className='px-4 py-3 whitespace-nowrap text-sm text-gray-900'>
+													{client.client_code}
 												</td>
 												<td className='px-4 py-3 whitespace-nowrap text-sm text-gray-900'>
 													{client.email}
