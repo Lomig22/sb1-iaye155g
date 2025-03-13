@@ -28,6 +28,7 @@ export default function ReceivableForm({
 		installment_number: '',
 		status: 'pending',
 		invoice_pdf_url: '',
+		notes: '',
 	});
 	const [newClientData, setNewClientData] = useState({
 		company_name: '',
@@ -411,6 +412,23 @@ export default function ReceivableForm({
 									setFormData({
 										...formData,
 										installment_number: e.target.value,
+									})
+								}
+								className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+							/>
+						</div>
+
+						<div>
+							<label className='block text-sm font-medium text-gray-700 mb-2'>
+								Commentaire
+							</label>
+							<input
+								type='text'
+								value={formData.notes}
+								onChange={(e) =>
+									setFormData({
+										...formData,
+										notes: e.target.value,
 									})
 								}
 								className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'

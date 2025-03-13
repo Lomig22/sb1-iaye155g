@@ -317,6 +317,9 @@ function ReceivablesList() {
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 									Statut
 								</th>
+								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+									Commentaire
+								</th>
 							</tr>
 						</thead>
 						<tbody className='bg-white divide-y divide-gray-200'>
@@ -437,6 +440,9 @@ function ReceivablesList() {
 											{receivable.status === 'pending' && 'En attente'}
 											{receivable.status === 'legal' && 'Contentieux'}
 										</span>
+									</td>
+									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+										{receivable.notes || '-'}
 									</td>
 								</tr>
 							))}
