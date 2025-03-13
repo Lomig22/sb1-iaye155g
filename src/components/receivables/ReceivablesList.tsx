@@ -294,6 +294,9 @@ function ReceivablesList() {
 									Code Client
 								</th>
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+									Email
+								</th>
+								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 									Facture
 								</th>
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
@@ -384,6 +387,9 @@ function ReceivablesList() {
 									</td>
 									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
 										{receivable.client.client_code}
+									</td>
+									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
+										{receivable.client.email}
 									</td>
 									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
 										{receivable.invoice_number}

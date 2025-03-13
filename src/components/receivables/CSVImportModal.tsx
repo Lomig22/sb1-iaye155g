@@ -1,9 +1,8 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { X, Upload, AlertCircle, Info, Loader2 } from 'lucide-react';
 import { Receivable, Client } from '../../types/database';
 import Papa from 'papaparse';
-import { MappingField } from '../clients/CSVImportModal';
 
 interface CSVImportModalProps {
 	onClose: () => void;
@@ -25,7 +24,7 @@ interface CSVMapping {
 	status: string | null;
 	document_date: string | null;
 	installment_number: string | null;
-	management_number: string | null;
+	client_code: string | null;
 	code: string | null;
 	created_at: string | null;
 	updated_at: string | null;
@@ -40,7 +39,7 @@ const mappingFields: MappingField[] = [
 	{ field: 'status', label: 'Statut', required: false },
 	{ field: 'document_date', label: 'Date pièce', required: false },
 	{ field: 'installment_number', label: "Numéro d'échéance", required: false },
-	{ field: 'management_number', label: 'Numéro dans gestion', required: false },
+	{ field: 'client_code', label: 'Numéro dans gestion', required: false },
 	{ field: 'code', label: 'Code', required: false },
 ];
 
@@ -62,19 +61,20 @@ const columnMapping: { [key: string]: string } = {
 	reference: 'invoice_number',
 
 	// Numéro dans gestion
-	'n° gestion': 'management_number',
-	'n° dans gestion': 'management_number',
-	'n°gestion': 'management_number',
-	'num gestion': 'management_number',
-	'numéro gestion': 'management_number',
-	'numero gestion': 'management_number',
-	'ref gestion': 'management_number',
-	'référence gestion': 'management_number',
-	'reference gestion': 'management_number',
-	'management number': 'management_number',
-	management_number: 'management_number',
-	'internal ref': 'management_number',
-	'internal reference': 'management_number',
+	'Numéro dans gestion': 'client_code',
+	'n° gestion': 'client_code',
+	'n° dans gestion': 'client_code',
+	'n°gestion': 'client_code',
+	'num gestion': 'client_code',
+	'numéro gestion': 'client_code',
+	'numero gestion': 'client_code',
+	'ref gestion': 'client_code',
+	'référence gestion': 'client_code',
+	'reference gestion': 'client_code',
+	'management number': 'client_code',
+	management_number: 'client_code',
+	'internal ref': 'client_code',
+	'internal reference': 'client_code',
 	// Code
 	code: 'code',
 	'code facture': 'code',
@@ -182,7 +182,7 @@ export default function CSVImportModal({
 	const [preview, setPreview] = useState<(Receivable & { client: Client })[]>(
 		[]
 	);
-	const [importing, setImporting] = useState(false);
+	const [, setImporting] = useState(false);
 	const [importedCount, setImportedCount] = useState(0);
 	const [clients, setClients] = useState<Client[]>([]);
 	const [clientMap, setClientMap] = useState<Record<string, Client>>({});
@@ -599,6 +599,10 @@ export default function CSVImportModal({
 				setError('Colonnes obligatoires manquantes dans le fichier CSV');
 				return;
 			}
+			const clientCodeIndex = csvHeaders.findIndex(
+				(h) => mapping[h] === 'client_code'
+			);
+
 			// Réinitialiser les nouveaux clients
 			const newClientsMap: Record<string, Client> = {};
 			const previewData: (Receivable & { client: Client })[] = data
@@ -632,6 +636,7 @@ export default function CSVImportModal({
 					const status = mapStatus(statusStr);
 					// Trouver le client correspondant
 					const clientId = getClientId(clientName);
+
 					//shanaka (Start)
 					// Check if the client is already in the new clients map
 					const client = clientId
@@ -646,6 +651,10 @@ export default function CSVImportModal({
 						const newClient: Client = {
 							id: tempId,
 							company_name: clientName,
+							client_code:
+								clientCodeIndex !== -1
+									? row[clientCodeIndex]
+									: Math.floor(Math.random() * (100000 - 150000) + 100000),
 							email: `${clientName
 								.toLowerCase()
 								.replace(/\s+/g, '.')}@example.com`, // Email temporaire
@@ -741,6 +750,7 @@ export default function CSVImportModal({
 								//Shanaka(Start)
 								// Trimmed the company_name
 								company_name: newClient.company_name.trim(),
+								client_code: newClient.client_code,
 								//Shanaka(Finish)
 								email: newClient.email,
 								needs_reminder: true,
@@ -825,6 +835,7 @@ export default function CSVImportModal({
 									.insert([
 										{
 											company_name: clientName,
+											client_code: clientCode,
 											email: `${clientName
 												.toLowerCase()
 												.replace(/\s+/g, '.')}@example.com`,
@@ -1195,7 +1206,7 @@ export default function CSVImportModal({
 									disabled={savingSchema}
 								>
 									{savingSchema && <Loader2 className='animate-spin' />}
-									Save Mapping
+									Sauvegarder
 								</button>
 								<div className='flex gap-4'>
 									<button

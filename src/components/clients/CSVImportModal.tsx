@@ -771,7 +771,7 @@ export default function CSVImportModal({
 									disabled={savingSchema}
 								>
 									{savingSchema && <Loader2 className='animate-spin' />}
-									Save Mapping
+									Sauvegarder
 								</button>
 								<div className='flex space-x-4'>
 									<button
