@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { supabase } from '../../lib/supabase';
-import { X, Upload, AlertCircle, Info } from 'lucide-react';
+import { X, Upload, AlertCircle, Info, Loader2 } from 'lucide-react';
 import { Receivable, Client } from '../../types/database';
 import Papa from 'papaparse';
 import { MappingField } from '../clients/CSVImportModal';
@@ -62,19 +62,19 @@ const columnMapping: { [key: string]: string } = {
 	reference: 'invoice_number',
 
 	// Numéro dans gestion
-	'n° gestion': 'invoice_number',
-	'n° dans gestion': 'invoice_number',
-	'n°gestion': 'invoice_number',
-	'num gestion': 'invoice_number',
-	'numéro gestion': 'invoice_number',
-	'numero gestion': 'invoice_number',
-	'ref gestion': 'invoice_number',
-	'référence gestion': 'invoice_number',
-	'reference gestion': 'invoice_number',
-	'management number': 'invoice_number',
-	management_number: 'invoice_number',
-	'internal ref': 'invoice_number',
-	'internal reference': 'invoice_number',
+	'n° gestion': 'management_number',
+	'n° dans gestion': 'management_number',
+	'n°gestion': 'management_number',
+	'num gestion': 'management_number',
+	'numéro gestion': 'management_number',
+	'numero gestion': 'management_number',
+	'ref gestion': 'management_number',
+	'référence gestion': 'management_number',
+	'reference gestion': 'management_number',
+	'management number': 'management_number',
+	management_number: 'management_number',
+	'internal ref': 'management_number',
+	'internal reference': 'management_number',
 	// Code
 	code: 'code',
 	'code facture': 'code',
@@ -189,6 +189,7 @@ export default function CSVImportModal({
 	const [newClients, setNewClients] = useState<Record<string, Client>>({});
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const [mapping, setMapping] = useState<Record<string, keyof CSVMapping>>({});
+	const [savingSchema, setSavingSchema] = useState(false);
 
 	// Colonnes attendues dans le CSV
 	const expectedHeaders = [
@@ -242,15 +243,57 @@ export default function CSVImportModal({
 		}
 	};
 
-	const handleMapping = (header: string[]) => {
-		// First check if a saved mapping exist, if so use that, else use the auto mapping
+	const handleMapping = async (header: string[]) => {
+		const headerMap = new Map(
+			header.map((item) => [columnMapping[item], true])
+		);
+		const missingHeaders: string[] = [];
+		for (const expected of expectedHeaders) {
+			if (!headerMap.has(columnMapping[expected.toLowerCase().trim()])) {
+				missingHeaders.push(expected);
+			}
+		}
+
+		if (missingHeaders.length > 0) {
+			setError(
+				`Le fichier CSV doit contenir une colonne "${missingHeaders.join(
+					','
+				)}" pour importer les données`
+			);
+			return;
+		}
+		// Check if expected columns exist
+		// for (const expected of expectedHeaders) {
+		// 	if (!header.includes(expected)) {
+		// 		setError(
+		// 			`Le fichier CSV doit contenir une colonne "${expected}" pour importer les données`
+		// 		);
+		// 		return;
+		// 	}
+		// }
 		const autoMapping: Record<string, keyof CSVMapping> = {};
-		// columnMapping
-		for (const col of header) {
-			const mappedColumn = columnMapping[col.trim().toLowerCase()];
-			if (mappedColumn !== undefined && mappedColumn !== null) {
-				autoMapping[col.trim().toLowerCase()] =
-					mappedColumn as keyof CSVMapping;
+		const {
+			data: { user },
+		} = await supabase.auth.getUser();
+		if (!user) throw new Error('Utilisateur non authentifié');
+		const { data: savedMapping } = await supabase
+			.from('profiles')
+			.select('receivables_mapping')
+			.eq('id', user.id);
+		if (savedMapping !== undefined && savedMapping !== null) {
+			const decodedMapping = JSON.parse(savedMapping[0].receivables_mapping);
+
+			Object.entries(decodedMapping).forEach(([key, value]) => {
+				autoMapping[key] = value as keyof CSVMapping;
+			});
+		} else {
+			// columnMapping
+			for (const col of header) {
+				const mappedColumn = columnMapping[col.trim().toLowerCase()];
+				if (mappedColumn !== undefined && mappedColumn !== null) {
+					autoMapping[col.trim().toLowerCase()] =
+						mappedColumn as keyof CSVMapping;
+				}
 			}
 		}
 		setMapping(autoMapping);
@@ -931,6 +974,28 @@ export default function CSVImportModal({
 		}
 	};
 
+	const saveMapping = async () => {
+		const {
+			data: { user },
+		} = await supabase.auth.getUser();
+		if (!user) throw new Error('Utilisateur non authentifié');
+
+		try {
+			setSavingSchema(true);
+			await supabase
+				.from('profiles')
+				.update({ receivables_mapping: JSON.stringify(mapping) })
+				.eq('id', user.id);
+			setSavingSchema(false);
+		} catch (err) {
+			console.error(
+				'Erreur lors de la suppression des créances manquantes:',
+				err
+			);
+			setSavingSchema(false);
+		}
+	};
+
 	const resetForm = () => {
 		setFile(null);
 		setData([]);
@@ -1104,6 +1169,7 @@ export default function CSVImportModal({
 														e.target.value as keyof CSVMapping | ''
 													)
 												}
+												disabled={savingSchema}
 												className='w-1/2 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
 											>
 												<option value=''>Ne pas importer</option>
@@ -1126,19 +1192,31 @@ export default function CSVImportModal({
 								</div>
 							</div>
 
-							<div className='flex justify-end space-x-4'>
+							<div className='flex justify-between space-x-4'>
 								<button
-									onClick={resetForm}
-									className='px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors'
+									onClick={saveMapping}
+									className='px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors flex'
+									disabled={savingSchema}
 								>
-									Annuler
+									{savingSchema && <Loader2 className='animate-spin' />}
+									Save Mapping
 								</button>
-								<button
-									onClick={generatePreview}
-									className='px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors'
-								>
-									Aperçu
-								</button>
+								<div className='flex gap-4'>
+									<button
+										onClick={resetForm}
+										disabled={savingSchema}
+										className='px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors'
+									>
+										Annuler
+									</button>
+									<button
+										onClick={generatePreview}
+										disabled={savingSchema}
+										className='px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors'
+									>
+										Aperçu
+									</button>
+								</div>
 							</div>
 						</div>
 					)}
