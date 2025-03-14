@@ -61,8 +61,8 @@ function ReceivablesList() {
 			const { data: reminderPorfile } = await supabase
 				.from('reminder_profile')
 				.select()
-				.or(`public.eq.true,owner_id.eq.${user.id}`);
-			// .or('id.eq.2,name.eq.Han')
+				.eq('name', 'Default')
+				.eq('owner_id', user.id);
 			setReminderProfiles(reminderPorfile || []);
 
 			if (error) throw error;
