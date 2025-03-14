@@ -68,11 +68,35 @@ export default function ClientForm({
 			}
 
 			if (mode === 'create') {
+				// get the defalut reminder profile
+				const { data: reminderPorfile } = await supabase
+					.from('reminder_profile')
+					.select()
+					.eq('name', 'Default');
+
+				const reminderProfileExist =
+					reminderPorfile !== null && reminderPorfile[0] !== null;
+
 				const { data, error } = await supabase
 					.from('clients')
 					.insert([
 						{
 							...formData,
+							reminder_profile: reminderProfileExist
+								? reminderPorfile[0].id
+								: null,
+							reminder_delay_1: reminderProfileExist
+								? reminderPorfile[0].delay1
+								: 15,
+							reminder_delay_2: reminderProfileExist
+								? reminderPorfile[0].delay2
+								: 30,
+							reminder_delay_3: reminderProfileExist
+								? reminderPorfile[0].delay3
+								: 45,
+							reminder_delay_final: reminderProfileExist
+								? reminderPorfile[0].delay4
+								: 60,
 							owner_id: user.id,
 						},
 					])
