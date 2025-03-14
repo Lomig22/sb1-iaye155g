@@ -47,7 +47,7 @@ export interface Receivable {
 }
 
 export interface ReminderProfile {
-	id: string;
+	id?: string;
 	name: string;
 	delay1: number;
 	delay2: number;
@@ -55,8 +55,8 @@ export interface ReminderProfile {
 	delay4: number;
 	owner_id: string;
 	public: boolean;
-	created_at: string;
-	updated_at: string;
+	created_at?: string;
+	updated_at?: string;
 }
 
 export interface Reminder {
