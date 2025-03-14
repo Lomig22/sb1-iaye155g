@@ -22,6 +22,8 @@ export interface Client {
 	updated_at: string;
 	owner_id: string;
 	client_code: string;
+	notes?: string;
+	reminder_profile?: string;
 }
 
 export interface Receivable {
@@ -38,6 +40,21 @@ export interface Receivable {
 	invoice_pdf_url?: string;
 	installment_number?: string; // Numéro échéance
 	owner_id: string;
+	created_at: string;
+	updated_at: string;
+	notes?: string;
+	email?: string;
+}
+
+export interface ReminderProfile {
+	id: string;
+	name: string;
+	delay1: number;
+	delay2: number;
+	delay3: number;
+	delay4: number;
+	owner_id: string;
+	public: boolean;
 	created_at: string;
 	updated_at: string;
 }

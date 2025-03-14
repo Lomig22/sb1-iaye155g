@@ -1,0 +1,2 @@
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS notes text;
+ALTER TABLE receivables ADD COLUMN IF NOT EXISTS notes text;

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Receivable, Client } from '../../types/database';
+import { Receivable, Client, ReminderProfile } from '../../types/database';
 import {
 	Plus,
 	Mail,
@@ -41,18 +41,29 @@ function ReceivablesList() {
 	>(null);
 	const [deleting, setDeleting] = useState(false);
 	const [tooltipVisible, setTooltipVisible] = useState<string | null>(null);
+	const [reminderProfiles, setReminderProfiles] = useState<ReminderProfile[]>(
+		[]
+	);
 
 	const fetchReceivables = async () => {
 		try {
 			const { data, error } = await supabase
 				.from('receivables')
-				.select(
-					`
-          *,
-          client:clients(*)
-        `
-				)
+				.select(`*,client:clients(*)`)
 				.order('due_date', { ascending: false });
+
+			// Fetch profiles
+			const {
+				data: { user },
+			} = await supabase.auth.getUser();
+			if (!user) throw new Error('Utilisateur non authentifié');
+
+			const { data: reminderPorfile } = await supabase
+				.from('reminder_profile')
+				.select()
+				.or(`public.eq.true,owner_id.eq.${user.id}`);
+			// .or('id.eq.2,name.eq.Han')
+			setReminderProfiles(reminderPorfile || []);
 
 			if (error) throw error;
 			setReceivables(data || []);
@@ -317,6 +328,9 @@ function ReceivablesList() {
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 									Statut
 								</th>
+								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+									Commentaire
+								</th>
 							</tr>
 						</thead>
 						<tbody className='bg-white divide-y divide-gray-200'>
@@ -389,7 +403,7 @@ function ReceivablesList() {
 										{receivable.client.client_code}
 									</td>
 									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
-										{receivable.client.email}
+										{receivable.email}
 									</td>
 									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
 										{receivable.invoice_number}
@@ -437,6 +451,9 @@ function ReceivablesList() {
 											{receivable.status === 'pending' && 'En attente'}
 											{receivable.status === 'legal' && 'Contentieux'}
 										</span>
+									</td>
+									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+										{receivable.notes || '-'}
 									</td>
 								</tr>
 							))}
@@ -489,6 +506,7 @@ function ReceivablesList() {
 						// Rafraîchir les données pour mettre à jour l'affichage des icônes d'avertissement
 						fetchReceivables();
 					}}
+					reminderProfiles={reminderProfiles}
 				/>
 			)}
 
