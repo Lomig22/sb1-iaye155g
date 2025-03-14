@@ -73,7 +73,7 @@ export default function CSVImportModal({
 
 	const mappingFields: MappingField[] = [
 		{ field: 'company_name', label: "Nom de l'entreprise", required: true },
-		{ field: 'client_code', label: 'Code Client', required: true },
+		{ field: 'client_code', label: 'Code Client', required: false },
 		{ field: 'email', label: 'Email', required: true },
 		{ field: 'phone', label: 'Téléphone', required: false },
 		{ field: 'address', label: 'Adresse', required: false },
@@ -533,6 +533,9 @@ export default function CSVImportModal({
 			const clientsToInsert = clientsToImport.map((client) => {
 				return {
 					...client,
+					client_code:
+						client.client_code ||
+						Math.floor(Math.random() * (100000 - 150000) + 100000),
 					owner_id: user.id,
 					reminder_profile: reminderProfileExist ? reminderPorfile[0].id : null,
 					reminder_delay_1: reminderProfileExist
@@ -547,7 +550,6 @@ export default function CSVImportModal({
 					reminder_delay_final: reminderProfileExist
 						? reminderPorfile[0].delay4
 						: 60,
-
 					created_at: client.created_at || new Date().toISOString(),
 					updated_at: client.updated_at || new Date().toISOString(),
 				};

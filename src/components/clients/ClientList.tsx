@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Client } from '../../types/database';
+import { Client, ReminderProfile } from '../../types/database';
 import {
 	Plus,
 	Search,
@@ -16,7 +16,9 @@ import ClientForm from './ClientForm';
 import CSVImportModal from './CSVImportModal';
 
 function ClientList() {
-	const [clients, setClients] = useState<Client[]>([]);
+	const [clients, setClients] = useState<
+		(Client & { reminderProfile?: ReminderProfile })[]
+	>([]);
 	const [loading, setLoading] = useState(true);
 	const [searchTerm, setSearchTerm] = useState('');
 	const [showForm, setShowForm] = useState(false);
@@ -38,7 +40,7 @@ function ClientList() {
 
 			const { data: clientsData, error } = await supabase
 				.from('clients')
-				.select('*')
+				.select('*, reminderProfile:reminder_profile(*)')
 				.eq('owner_id', user.id)
 				.order('company_name');
 
@@ -310,7 +312,7 @@ function ClientList() {
 										{formatDate(client.updated_at)}
 									</td>
 									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
-										{client.reminder_profile || '-'}
+										{client.reminderProfile?.name || '-'}
 									</td>
 									<td className='px-6 py-4 whitespace-nowrap'>
 										<div className='flex items-center'>
@@ -379,13 +381,13 @@ function ClientList() {
 					onClientUpdated={(updatedClient) => {
 						setClients(
 							clients.map((c) =>
-								c.id === updatedClient.id ? updatedClient : c
+								c.id === updatedClient.id ? { ...c, ...updatedClient } : c
 							)
 						);
 						setShowForm(false);
 						setSelectedClient(null);
 					}}
-					client={selectedClient}
+					client={selectedClient ?? undefined}
 					mode={selectedClient ? 'edit' : 'create'}
 				/>
 			)}

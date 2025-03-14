@@ -565,7 +565,7 @@ export default function CSVImportModal({
 		return 'pending';
 	};
 
-	const generatePreview = () => {
+	const generatePreview = async () => {
 		try {
 			// First check if the required fields are present
 			// SCV header has the header from the csv
@@ -741,6 +741,15 @@ export default function CSVImportModal({
 			// Créer d'abord les nouveaux clients
 			const createdClients: Record<string, string> = {}; // Map des IDs temporaires vers les vrais IDs
 
+			// Get the default reminder profile
+			const { data: reminderPorfile } = await supabase
+				.from('reminder_profile')
+				.select()
+				.eq('name', 'Default');
+
+			const reminderProfileExist =
+				reminderPorfile !== null && reminderPorfile[0] !== null;
+
 			for (const [tempId, newClient] of Object.entries(newClients)) {
 				try {
 					const { data: createdClient, error } = await supabase
@@ -751,10 +760,26 @@ export default function CSVImportModal({
 								// Trimmed the company_name
 								company_name: newClient.company_name.trim(),
 								client_code: newClient.client_code,
+
 								//Shanaka(Finish)
 								email: newClient.email,
 								needs_reminder: true,
 								owner_id: user.id,
+								reminder_profile: reminderProfileExist
+									? reminderPorfile[0].id
+									: null,
+								reminder_delay_1: reminderProfileExist
+									? reminderPorfile[0].delay1
+									: 15,
+								reminder_delay_2: reminderProfileExist
+									? reminderPorfile[0].delay2
+									: 30,
+								reminder_delay_3: reminderProfileExist
+									? reminderPorfile[0].delay3
+									: 45,
+								reminder_delay_final: reminderProfileExist
+									? reminderPorfile[0].delay4
+									: 60,
 							},
 						])
 						.select()

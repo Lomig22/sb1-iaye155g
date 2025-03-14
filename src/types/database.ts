@@ -46,6 +46,19 @@ export interface Receivable {
 	email?: string;
 }
 
+export interface ReminderProfile {
+	id: string;
+	name: string;
+	delay1: number;
+	delay2: number;
+	delay3: number;
+	delay4: number;
+	owner_id: string;
+	public: boolean;
+	created_at: string;
+	updated_at: string;
+}
+
 export interface Reminder {
 	id: string;
 	receivable_id: string;
