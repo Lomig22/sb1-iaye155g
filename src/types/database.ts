@@ -42,6 +42,7 @@ export interface Receivable {
 	created_at: string;
 	updated_at: string;
 	notes?: string;
+	email?: string;
 }
 
 export interface Reminder {

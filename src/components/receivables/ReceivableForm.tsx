@@ -18,6 +18,9 @@ export default function ReceivableForm({
 	const [clients, setClients] = useState<Client[]>([]);
 	const [error, setError] = useState<string | null>(null);
 	const [isNewClient, setIsNewClient] = useState(false);
+	const [clientEmails, setClientEmails] = useState<string[]>(
+		preselectedClient?.email ? preselectedClient.email.split(',') : []
+	);
 	const [formData, setFormData] = useState({
 		client_id: preselectedClient?.id || '',
 		invoice_number: '',
@@ -29,6 +32,7 @@ export default function ReceivableForm({
 		status: 'pending',
 		invoice_pdf_url: '',
 		notes: '',
+		email: preselectedClient?.email.split(',')[0] || '',
 	});
 	const [newClientData, setNewClientData] = useState({
 		company_name: '',
@@ -150,6 +154,13 @@ export default function ReceivableForm({
 		}
 	};
 
+	const handleSelectClient = (clientId: string) => {
+		setFormData({ ...formData, client_id: clientId });
+		setClientEmails(
+			clients.find((client) => client.id === clientId)?.email.split(',') || []
+		);
+	};
+
 	return (
 		<div className='fixed inset-0 bg-gray-600 bg-opacity-50 z-50 overflow-y-scroll'>
 			<div className='min-h-screen py-8 px-4 flex items-center justify-center'>
@@ -202,22 +213,43 @@ export default function ReceivableForm({
 							)}
 
 							{!isNewClient ? (
-								<select
-									required
-									value={formData.client_id}
-									onChange={(e) =>
-										setFormData({ ...formData, client_id: e.target.value })
-									}
-									className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-									disabled={!!preselectedClient}
-								>
-									<option value=''>Sélectionner un client</option>
-									{clients.map((client) => (
-										<option key={client.id} value={client.id}>
-											{client.company_name}
-										</option>
-									))}
-								</select>
+								<div className='flex flex-col space-y-6'>
+									<select
+										required
+										value={formData.client_id}
+										onChange={(e) => handleSelectClient(e.target.value)}
+										className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+										disabled={!!preselectedClient}
+									>
+										<option value=''>Sélectionner un client</option>
+										{clients.map((client) => (
+											<option key={client.id} value={client.id}>
+												{client.company_name}
+											</option>
+										))}
+									</select>
+									<div>
+										<label className='block text-sm font-medium text-gray-700 mb-2'>
+											Email
+										</label>
+										<select
+											required
+											value={formData.email}
+											onChange={(e) =>
+												setFormData({ ...formData, email: e.target.value })
+											}
+											className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+											disabled={!!preselectedClient}
+										>
+											<option value=''>Sélectionner un email</option>
+											{clientEmails.map((email) => (
+												<option key={email} value={email}>
+													{email}
+												</option>
+											))}
+										</select>
+									</div>
+								</div>
 							) : (
 								<div className='space-y-4'>
 									<div>

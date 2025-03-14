@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Client } from '../../types/database';
-import { X } from 'lucide-react';
+import { Minus, Plus, X } from 'lucide-react';
 
 interface ClientFormProps {
 	onClose: () => void;
@@ -20,6 +20,8 @@ export default function ClientForm({
 }: ClientFormProps) {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+
+	const [emails, setEmails] = useState(client?.email.split(',') || ['']);
 	const [formData, setFormData] = useState({
 		company_name: client?.company_name || '',
 		email: client?.email || '',
@@ -42,6 +44,15 @@ export default function ClientForm({
 		};
 	}, []);
 
+	const handleEmailDelete = (index: number) => {
+		const newEmails = [...emails];
+		newEmails.splice(index, 1);
+		setEmails(newEmails);
+		setFormData({
+			...formData,
+			email: newEmails.filter((item) => item != '').join(','),
+		});
+	};
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setLoading(true);
@@ -149,18 +160,60 @@ export default function ClientForm({
 							/>
 						</div>
 						<div>
-							<label className='block text-sm font-medium text-gray-700 mb-2'>
-								Email *
-							</label>
-							<input
-								type='email'
-								required
-								value={formData.email}
-								onChange={(e) =>
-									setFormData({ ...formData, email: e.target.value })
-								}
-								className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-							/>
+							<div className='flex flex-col gap-1 w-full'>
+								{emails.map((email, index) => (
+									<div
+										className='flex gap-1 justify-between items-end'
+										key={email}
+									>
+										<div className='w-full'>
+											<label className='block text-sm font-medium text-gray-700 mb-2'>
+												Email *
+											</label>
+											<input
+												type='email'
+												required={index === 0}
+												defaultValue={email}
+												onBlur={(e) => {
+													const newEmails = [...emails];
+													newEmails[index] = e.target.value;
+													setEmails(newEmails);
+													setFormData({
+														...formData,
+														email: newEmails
+															.filter((item) => item != '')
+															.join(','),
+													});
+												}}
+												className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+											/>
+										</div>
+										<div>
+											{index !== emails.length - 1 ? (
+												<button
+													type='button'
+													onClick={() => handleEmailDelete(index)}
+													title='Ajouter un nouvel e-mail'
+													className='px-2 py-2 text-red-600 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50 h-[50px]'
+												>
+													<Minus />
+												</button>
+											) : (
+												<button
+													className='px-2 py-2 text-blue-600 rounded-md  transition-colors disabled:opacity-50 h-[50px] hover:bg-gray-50'
+													type='button'
+													onClick={() =>
+														setEmails((prevEmails) => [...prevEmails, ''])
+													}
+													title="Supprimer l'e-mail"
+												>
+													<Plus />
+												</button>
+											)}
+										</div>
+									</div>
+								))}
+							</div>
 						</div>
 
 						<div>
