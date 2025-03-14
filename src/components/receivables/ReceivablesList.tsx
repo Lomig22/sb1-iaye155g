@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Receivable, Client } from '../../types/database';
+import { Receivable, Client, ReminderProfile } from '../../types/database';
 import {
 	Plus,
 	Mail,
@@ -41,18 +41,29 @@ function ReceivablesList() {
 	>(null);
 	const [deleting, setDeleting] = useState(false);
 	const [tooltipVisible, setTooltipVisible] = useState<string | null>(null);
+	const [reminderProfiles, setReminderProfiles] = useState<ReminderProfile[]>(
+		[]
+	);
 
 	const fetchReceivables = async () => {
 		try {
 			const { data, error } = await supabase
 				.from('receivables')
-				.select(
-					`
-          *,
-          client:clients(*)
-        `
-				)
+				.select(`*,client:clients(*)`)
 				.order('due_date', { ascending: false });
+
+			// Fetch profiles
+			const {
+				data: { user },
+			} = await supabase.auth.getUser();
+			if (!user) throw new Error('Utilisateur non authentifié');
+
+			const { data: reminderPorfile } = await supabase
+				.from('reminder_profile')
+				.select()
+				.or(`public.eq.true,owner_id.eq.${user.id}`);
+			// .or('id.eq.2,name.eq.Han')
+			setReminderProfiles(reminderPorfile || []);
 
 			if (error) throw error;
 			setReceivables(data || []);
@@ -495,6 +506,7 @@ function ReceivablesList() {
 						// Rafraîchir les données pour mettre à jour l'affichage des icônes d'avertissement
 						fetchReceivables();
 					}}
+					reminderProfiles={reminderProfiles}
 				/>
 			)}
 

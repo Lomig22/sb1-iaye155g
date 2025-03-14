@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Client } from '../../types/database';
+import { Client, ReminderProfile } from '../../types/database';
 import { X, AlertCircle } from 'lucide-react';
 
 interface ReminderSettingsModalProps {
 	client: Client;
 	onClose: () => void;
+	reminderProfiles: ReminderProfile[];
 }
 
 export default function ReminderSettingsModal({
 	client,
 	onClose,
+	reminderProfiles,
 }: ReminderSettingsModalProps) {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
@@ -24,11 +26,8 @@ export default function ReminderSettingsModal({
 		reminder_template_2: client.reminder_template_2 || '',
 		reminder_template_3: client.reminder_template_3 || '',
 		reminder_template_final: client.reminder_template_final || '',
+		reminder_profile: client.reminder_profile || '',
 	});
-
-	useEffect(() => {
-		// Fetch profiles
-	}, []);
 
 	// Gestion de la touche Echap
 	useEffect(() => {
@@ -79,6 +78,7 @@ export default function ReminderSettingsModal({
 					reminder_template_2: formData.reminder_template_2.trim(),
 					reminder_template_3: formData.reminder_template_3.trim(),
 					reminder_template_final: formData.reminder_template_final.trim(),
+					reminder_profile: formData.reminder_profile,
 				})
 				.eq('id', client.id);
 
@@ -95,6 +95,21 @@ export default function ReminderSettingsModal({
 		} finally {
 			setLoading(false);
 		}
+	};
+
+	const handleProfileChange = (profileId: string) => {
+		if (profileId === null || profileId === undefined) return;
+		const selectedProfile = reminderProfiles.find(
+			(profile) => profile.id === profileId
+		);
+		setFormData({
+			...formData,
+			reminder_profile: profileId,
+			reminder_delay_1: selectedProfile?.delay1 || 15,
+			reminder_delay_2: selectedProfile?.delay2 || 30,
+			reminder_delay_3: selectedProfile?.delay3 || 45,
+			reminder_delay_final: selectedProfile?.delay4 || 60,
+		});
 	};
 
 	const getTemplateExample = (step: number) => {
@@ -135,7 +150,25 @@ export default function ReminderSettingsModal({
 					)}
 
 					<form onSubmit={handleSubmit} className='space-y-6'>
-						<div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+						<div className='grid grid-cols-2 gap-6'>
+							<div className='col-span-2'>
+								<label className='block text-sm font-medium text-gray-700 mb-2'>
+									Profil de rappel
+								</label>
+								<select
+									required
+									value={formData.reminder_profile}
+									onChange={(e) => handleProfileChange(e.target.value)}
+									className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+								>
+									<option value=''>Sélectionner un profil de rappel</option>
+									{reminderProfiles.map((profile) => (
+										<option key={profile.id} value={profile.id}>
+											{profile.name}
+										</option>
+									))}
+								</select>
+							</div>
 							<div>
 								<label className='block text-sm font-medium text-gray-700 mb-2'>
 									Délai première relance (jours)
