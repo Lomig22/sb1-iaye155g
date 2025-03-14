@@ -73,7 +73,7 @@ export default function CSVImportModal({
 
 	const mappingFields: MappingField[] = [
 		{ field: 'company_name', label: "Nom de l'entreprise", required: true },
-		{ field: 'client_code', label: 'Code Client', required: false },
+		{ field: 'client_code', label: 'Code Client', required: true },
 		{ field: 'email', label: 'Email', required: true },
 		{ field: 'phone', label: 'Téléphone', required: false },
 		{ field: 'address', label: 'Adresse', required: false },
@@ -521,14 +521,33 @@ export default function CSVImportModal({
 			// Importer les clients directement sans filtrage supplémentaire
 			let successCount = 0;
 
+			// Get the default reminder profile
+			const { data: reminderPorfile } = await supabase
+				.from('reminder_profile')
+				.select()
+				.eq('name', 'Default');
+
+			const reminderProfileExist =
+				reminderPorfile !== null && reminderPorfile[0] !== null;
 			// Préparer les clients pour l'insertion
 			const clientsToInsert = clientsToImport.map((client) => {
 				return {
 					...client,
-					client_code:
-						client.client_code ||
-						Math.floor(Math.random() * (100000 - 150000) + 100000),
 					owner_id: user.id,
+					reminder_profile: reminderProfileExist ? reminderPorfile[0].id : null,
+					reminder_delay_1: reminderProfileExist
+						? reminderPorfile[0].delay1
+						: 15,
+					reminder_delay_2: reminderProfileExist
+						? reminderPorfile[0].delay2
+						: 30,
+					reminder_delay_3: reminderProfileExist
+						? reminderPorfile[0].delay3
+						: 45,
+					reminder_delay_final: reminderProfileExist
+						? reminderPorfile[0].delay4
+						: 60,
+
 					created_at: client.created_at || new Date().toISOString(),
 					updated_at: client.updated_at || new Date().toISOString(),
 				};

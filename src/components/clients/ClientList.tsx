@@ -224,6 +224,9 @@ function ClientList() {
 									Mis à jour
 								</th>
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+									Profil de rappel
+								</th>
+								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 									Relance
 								</th>
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
@@ -305,6 +308,9 @@ function ClientList() {
 									</td>
 									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
 										{formatDate(client.updated_at)}
+									</td>
+									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+										{client.reminder_profile || '-'}
 									</td>
 									<td className='px-6 py-4 whitespace-nowrap'>
 										<div className='flex items-center'>

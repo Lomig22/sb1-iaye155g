@@ -23,6 +23,7 @@ export interface Client {
 	owner_id: string;
 	client_code: string;
 	notes?: string;
+	reminder_profile?: string;
 }
 
 export interface Receivable {
