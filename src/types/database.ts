@@ -68,3 +68,13 @@ export interface Reminder {
 	email_content?: string;
 	created_at: string;
 }
+
+export interface UnknownClient {
+	id?: string;
+	owner_id: string;
+	name: string;
+	invoice_no: string;
+	client_code: string;
+	created_at?: string;
+	updated_at?: string;
+}
