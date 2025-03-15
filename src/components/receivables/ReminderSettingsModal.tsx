@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Client, ReminderProfile } from '../../types/database';
-import { X, AlertCircle } from 'lucide-react';
+import { X, AlertCircle, Play, Pause } from 'lucide-react';
 
 interface ReminderSettingsModalProps {
 	client: Client;
@@ -372,21 +372,41 @@ export default function ReminderSettingsModal({
 							</div>
 						</div>
 
-						<div className='flex justify-end space-x-4'>
-							<button
+						<div className='flex justify-between space-x-4'>
+							{/* <button
 								type='button'
-								onClick={onClose}
-								className='px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors'
-							>
-								Annuler
-							</button>
-							<button
-								type='submit'
+								// onClick={onClose}
 								disabled={loading}
-								className='px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50'
-							>
-								{loading ? 'Enregistrement...' : 'Enregistrer'}
-							</button>
+								className='px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors'
+							> */}
+							<div title='Stop sending automatic reminders'>
+								{/* <Play
+									className='cursor-pointer hover:fill-blue-400 stroke-blue-400'
+									strokeWidth={2}
+								/> */}
+								<Pause
+									className='cursor-pointer hover:fill-blue-400 stroke-blue-400'
+									strokeWidth={2}
+								/>
+							</div>
+							{/* </button> */}
+							<div className='flex space-x-4'>
+								<button
+									type='button'
+									onClick={onClose}
+									disabled={loading}
+									className='px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors'
+								>
+									Annuler
+								</button>
+								<button
+									type='submit'
+									disabled={loading}
+									className='px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50'
+								>
+									{loading ? 'Enregistrement...' : 'Enregistrer'}
+								</button>
+							</div>
 						</div>
 					</form>
 				</div>
