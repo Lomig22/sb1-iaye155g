@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Client, Receivable, Reminder } from '../../types/database';
-import { AlertCircle, Search } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 
 const ReminderList = () => {
 	const [isLoading, setIsLoading] = useState(true);
