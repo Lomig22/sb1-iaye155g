@@ -438,7 +438,11 @@ function ReceivablesList() {
 													? 'bg-green-100 text-green-800'
 													: receivable.status === 'late'
 													? 'bg-red-100 text-red-800'
-													: receivable.status === 'reminded'
+													: receivable.status === 'reminded' ||
+													  receivable.status === 'Relance 1' ||
+													  receivable.status === 'Relance 2' ||
+													  receivable.status === 'Relance 3' ||
+													  receivable.status === 'Relance finale'
 													? 'bg-yellow-100 text-yellow-800'
 													: receivable.status === 'legal'
 													? 'bg-purple-100 text-purple-800'
@@ -450,6 +454,11 @@ function ReceivablesList() {
 											{receivable.status === 'reminded' && 'Relancé'}
 											{receivable.status === 'pending' && 'En attente'}
 											{receivable.status === 'legal' && 'Contentieux'}
+											{receivable.status === 'Relance 1' && 'Relance 1'}
+											{receivable.status === 'Relance 2' && 'Relance 2'}
+											{receivable.status === 'Relance 3' && 'Relance 3'}
+											{receivable.status === 'Relance finale' &&
+												'Relance finale'}
 										</span>
 									</td>
 									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>

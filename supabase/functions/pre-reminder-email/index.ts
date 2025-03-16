@@ -114,7 +114,7 @@ const updateReminderTable = async (
 			reminder_status: action.toLowerCase(),
 			status:
 				action === 'pre'
-					? 'pending'
+					? 'reminded'
 					: action === 'first'
 					? 'Relance 1'
 					: action === 'second'

@@ -38,7 +38,16 @@ export interface Receivable {
 	paid_amount?: number; // Montant réglé
 	document_date?: string; // Date pièce
 	due_date: string;
-	status: 'pending' | 'reminded' | 'paid' | 'late' | 'legal';
+	status:
+		| 'pending'
+		| 'reminded'
+		| 'paid'
+		| 'late'
+		| 'legal'
+		| 'Relance 1'
+		| 'Relance 2'
+		| 'Relance 3'
+		| 'Relance finale';
 	invoice_pdf_url?: string;
 	installment_number?: string; // Numéro échéance
 	owner_id: string;
