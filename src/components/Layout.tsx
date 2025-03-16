@@ -9,6 +9,7 @@ import {
 	X,
 	Home,
 	FileQuestion,
+	CalendarCheck,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { AuthSessionMissingError } from '@supabase/supabase-js';
@@ -63,6 +64,7 @@ export default function Layout() {
 		{ name: 'Clients inconnus', href: '/unknown_clients', icon: FileQuestion },
 		{ name: 'Créances', href: '/receivables', icon: FileText },
 		{ name: 'Paramètres', href: '/settings', icon: Settings },
+		{ name: 'Relance', href: '/reminders', icon: CalendarCheck },
 	];
 
 	return (

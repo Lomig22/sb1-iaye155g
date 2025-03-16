@@ -17,6 +17,7 @@ import Dashboard from './components/Dashboard';
 import ReceivablesList from './components/receivables/ReceivablesList';
 import Settings from './components/settings/Settings';
 import UnknownClientList from './components/unknownClients/UnknownClientList';
+import ReminderList from './components/reminders/ReminderList';
 
 function App() {
 	const [user, setUser] = useState<User | null>(null);
@@ -95,6 +96,7 @@ function App() {
 					<Route path='/clients' element={<ClientList />} />
 					<Route path='/receivables' element={<ReceivablesList />} />
 					<Route path='/unknown_clients' element={<UnknownClientList />} />
+					<Route path='/reminders' element={<ReminderList />} />
 					<Route path='/settings' element={<Settings />} />
 					<Route path='*' element={<Navigate to='/' replace />} />
 				</Route>
