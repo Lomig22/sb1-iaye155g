@@ -324,28 +324,10 @@ export default function CSVImportModal({
 					const cleanedHeaders = headers.map((h) => {
 						return h.toLowerCase().trim();
 					});
-					// Shanaka (Finish)
 					setCsvHeaders(cleanedHeaders);
-					// Vérification du format des colonnes
-					// const missingHeaders = expectedHeaders.filter(
-					// 	(header) =>
-					// 		!cleanedHeaders.some((h) => {
-					// 			return columnMapping[h].toLowerCase() === header.toLowerCase();
-					// 		})
-					// );
-
-					// if (missingHeaders.length > 0) {
-					// 	setError(
-					// 		`Le format du fichier est incorrect. Colonnes manquantes: ${missingHeaders.join(
-					// 			', '
-					// 		)}`
-					// 	);
-					// 	return;
-					// }
 
 					const rows = result.data.slice(1) as string[][];
 					setData(rows);
-					//generatePreview(cleanedHeaders, rows);
 					handleMapping(cleanedHeaders);
 				}
 			},

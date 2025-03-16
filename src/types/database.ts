@@ -24,6 +24,8 @@ export interface Client {
 	client_code: string;
 	notes?: string;
 	reminder_profile?: string;
+	pre_reminder_days?: number;
+	pre_reminder_template?: string;
 }
 
 export interface Receivable {
@@ -36,7 +38,16 @@ export interface Receivable {
 	paid_amount?: number; // Montant réglé
 	document_date?: string; // Date pièce
 	due_date: string;
-	status: 'pending' | 'reminded' | 'paid' | 'late' | 'legal';
+	status:
+		| 'pending'
+		| 'reminded'
+		| 'paid'
+		| 'late'
+		| 'legal'
+		| 'Relance 1'
+		| 'Relance 2'
+		| 'Relance 3'
+		| 'Relance finale';
 	invoice_pdf_url?: string;
 	installment_number?: string; // Numéro échéance
 	owner_id: string;
@@ -44,6 +55,7 @@ export interface Receivable {
 	updated_at: string;
 	notes?: string;
 	email?: string;
+	automatic_reminder?: boolean;
 }
 
 export interface ReminderProfile {
@@ -67,4 +79,14 @@ export interface Reminder {
 	email_sent: boolean;
 	email_content?: string;
 	created_at: string;
+}
+
+export interface UnknownClient {
+	id?: string;
+	owner_id: string;
+	name: string;
+	invoice_no: string;
+	client_code: string;
+	created_at?: string;
+	updated_at?: string;
 }

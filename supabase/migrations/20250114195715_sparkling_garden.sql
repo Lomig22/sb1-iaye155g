@@ -62,9 +62,9 @@ CREATE TABLE IF NOT EXISTS receivables (
     invoice_pdf_url text,
     created_at timestamptz DEFAULT now(),
     updated_at timestamptz DEFAULT now(),
-    CONSTRAINT valid_status CHECK (status IN ('pending', 'reminded', 'paid', 'late', 'legal'))
+    CONSTRAINT valid_status CHECK (status IN ('pending', 'reminded', 'paid', 'late', 'legal', 'Relance 1', 
+    'Relance 2', 'Relance 3', 'Relance finale'))
 );
-
 -- Table des relances
 CREATE TABLE IF NOT EXISTS reminders (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS reminders (
     email_sent boolean DEFAULT false,
     email_content text,
     created_at timestamptz DEFAULT now(),
-    CONSTRAINT valid_reminder_type CHECK (reminder_type IN ('first', 'second', 'third', 'final', 'legal'))
+    CONSTRAINT valid_reminder_type CHECK (reminder_type IN ('first', 'second', 'third', 'final', 'legal', 'pre'))
 );
 
 -- Activation de RLS
