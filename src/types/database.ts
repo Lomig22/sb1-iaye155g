@@ -24,6 +24,8 @@ export interface Client {
 	client_code: string;
 	notes?: string;
 	reminder_profile?: string;
+	pre_reminder_days?: number;
+	pre_reminder_template?: string;
 }
 
 export interface Receivable {
@@ -44,6 +46,7 @@ export interface Receivable {
 	updated_at: string;
 	notes?: string;
 	email?: string;
+	automatic_reminder?: boolean;
 }
 
 export interface ReminderProfile {

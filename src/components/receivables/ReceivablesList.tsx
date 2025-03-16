@@ -44,7 +44,6 @@ function ReceivablesList() {
 	const [reminderProfiles, setReminderProfiles] = useState<ReminderProfile[]>(
 		[]
 	);
-
 	const fetchReceivables = async () => {
 		try {
 			const { data, error } = await supabase
@@ -380,6 +379,7 @@ function ReceivablesList() {
 											<button
 												onClick={() => {
 													setSelectedClient(receivable.client);
+													setSelectedReceivable(receivable);
 													setShowSettings(true);
 												}}
 												className='text-gray-600 hover:text-gray-800'
@@ -497,16 +497,18 @@ function ReceivablesList() {
 				/>
 			)}
 
-			{showSettings && selectedClient && (
+			{showSettings && selectedClient && selectedReceivable && (
 				<ReminderSettingsModal
 					client={selectedClient}
 					onClose={() => {
 						setShowSettings(false);
 						setSelectedClient(null);
+						setSelectedReceivable(null);
 						// Rafraîchir les données pour mettre à jour l'affichage des icônes d'avertissement
 						fetchReceivables();
 					}}
 					reminderProfiles={reminderProfiles}
+					receivable={selectedReceivable}
 				/>
 			)}
 

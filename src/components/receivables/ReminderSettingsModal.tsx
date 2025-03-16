@@ -1,22 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Client, ReminderProfile } from '../../types/database';
+import { Client, Receivable, ReminderProfile } from '../../types/database';
 import { X, AlertCircle, Play, Pause } from 'lucide-react';
 
 interface ReminderSettingsModalProps {
 	client: Client;
 	onClose: () => void;
 	reminderProfiles: ReminderProfile[];
+	receivable: Receivable;
 }
 
 export default function ReminderSettingsModal({
 	client,
 	onClose,
 	reminderProfiles,
+	receivable,
 }: ReminderSettingsModalProps) {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [success, setSuccess] = useState(false);
+	const [automaticReminder, setAutomaticReminder] = useState<boolean>(
+		receivable.automatic_reminder ?? false
+	);
 	const [formData, setFormData] = useState({
 		reminder_delay_1: client.reminder_delay_1 || 15,
 		reminder_delay_2: client.reminder_delay_2 || 30,
@@ -27,6 +32,8 @@ export default function ReminderSettingsModal({
 		reminder_template_3: client.reminder_template_3 || '',
 		reminder_template_final: client.reminder_template_final || '',
 		reminder_profile: client.reminder_profile || '',
+		pre_reminder_days: client.pre_reminder_days || 1,
+		pre_reminder_template: client.pre_reminder_template || '',
 	});
 
 	// Gestion de la touche Echap
@@ -79,6 +86,8 @@ export default function ReminderSettingsModal({
 					reminder_template_3: formData.reminder_template_3.trim(),
 					reminder_template_final: formData.reminder_template_final.trim(),
 					reminder_profile: formData.reminder_profile,
+					pre_reminder_days: formData.pre_reminder_days,
+					pre_reminder_template: formData.pre_reminder_template,
 				})
 				.eq('id', client.id);
 
@@ -118,8 +127,30 @@ export default function ReminderSettingsModal({
 			2: `Cher client,\n\nMalgré notre première relance, la facture {invoice_number} d'un montant de {amount} reste impayée.\n\nNous vous prions de procéder au règlement sous 48h.`,
 			3: `Cher client,\n\nLa facture {invoice_number} d'un montant de {amount} est toujours en attente de règlement malgré nos relances.\n\nSans paiement de votre part sous 72h, nous serons contraints d'engager une procédure de recouvrement.`,
 			4: `Cher client,\n\nCeci est notre dernière relance concernant la facture {invoice_number} d'un montant de {amount}.\n\nSans règlement immédiat, nous transmettrons le dossier à notre service contentieux.`,
+			5: `Cher client,\n\n nous n'avons pas encore reçu le paiement de la facture n° {invoice_number}, soit {amount}. Nous vous informons que vous disposez de {days_left} jours avant la date limite.\n\nMerci de régulariser la situation dans les plus brefs délais.`,
 		};
 		return examples[step] || '';
+	};
+
+	const handleAutomaticReminderToggle = async () => {
+		try {
+			setLoading(true);
+			setError(null);
+			// Update the receivable
+			const { error } = await supabase
+				.from('receivables')
+				.update({
+					automatic_reminder: !receivable.automatic_reminder,
+				})
+				.eq('id', receivable.id);
+			if (error) throw error;
+			setAutomaticReminder((prevState) => !prevState);
+		} catch (error) {
+			console.error('Erreur lors de la mise à jour des paramètres:', error);
+			setError(error.message || 'Impossible de mettre à jour les paramètres');
+		} finally {
+			setLoading(false);
+		}
 	};
 
 	return (
@@ -240,9 +271,57 @@ export default function ReminderSettingsModal({
 									className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
 								/>
 							</div>
+							<div>
+								<label className='block text-sm font-medium text-gray-700 mb-2'>
+									Pré relance (jours)
+								</label>
+								<input
+									type='number'
+									min='1'
+									value={formData.pre_reminder_days}
+									onChange={(e) =>
+										setFormData({
+											...formData,
+											pre_reminder_days: parseInt(e.target.value),
+										})
+									}
+									className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+								/>
+							</div>
 						</div>
 
 						<div className='space-y-4'>
+							<div>
+								<label className='block text-sm font-medium text-gray-700 mb-2'>
+									Template Pré relance
+								</label>
+								<div className='relative'>
+									<textarea
+										rows={4}
+										value={formData.pre_reminder_template}
+										onChange={(e) =>
+											setFormData({
+												...formData,
+												pre_reminder_template: e.target.value,
+											})
+										}
+										className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+										placeholder='Utilisez {company}, {amount}, {invoice_number}, {due_date}, {days_late} comme variables'
+									/>
+									<button
+										type='button'
+										onClick={() =>
+											setFormData({
+												...formData,
+												pre_reminder_template: getTemplateExample(5),
+											})
+										}
+										className='absolute right-2 bottom-2 text-sm text-blue-600 hover:text-blue-800'
+									>
+										Utiliser un exemple
+									</button>
+								</div>
+							</div>
 							<div>
 								<label className='block text-sm font-medium text-gray-700 mb-2'>
 									Template première relance
@@ -379,15 +458,21 @@ export default function ReminderSettingsModal({
 								disabled={loading}
 								className='px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors'
 							> */}
-							<div title='Stop sending automatic reminders'>
-								{/* <Play
-									className='cursor-pointer hover:fill-blue-400 stroke-blue-400'
-									strokeWidth={2}
-								/> */}
-								<Pause
-									className='cursor-pointer hover:fill-blue-400 stroke-blue-400'
-									strokeWidth={2}
-								/>
+							<div
+								title='Stop sending automatic reminders'
+								onClick={handleAutomaticReminderToggle}
+							>
+								{automaticReminder ? (
+									<Pause
+										className='cursor-pointer hover:fill-blue-400 stroke-blue-400'
+										strokeWidth={2}
+									/>
+								) : (
+									<Play
+										className='cursor-pointer hover:fill-blue-400 stroke-blue-400'
+										strokeWidth={2}
+									/>
+								)}
 							</div>
 							{/* </button> */}
 							<div className='flex space-x-4'>
