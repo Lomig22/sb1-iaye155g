@@ -134,6 +134,10 @@ function ClientList() {
 		);
 	}
 
+	const formatEmail = (emails: string) => {
+		const splitMail = emails.split(',');
+		return splitMail.length > 1 ? `${splitMail[0]}...` : splitMail[0];
+	};
 	return (
 		<div className='p-6'>
 			<div className='flex justify-between items-center mb-6'>
@@ -267,7 +271,7 @@ function ClientList() {
 										{client.client_code}
 									</td>
 									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
-										{client.email}
+										{formatEmail(client.email)}
 									</td>
 									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
 										{client.phone || '-'}

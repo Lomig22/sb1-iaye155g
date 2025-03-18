@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Receivable, Client, ReminderProfile } from '../../types/database';
+import {
+	Receivable,
+	Client,
+	ReminderProfile,
+	Reminder,
+} from '../../types/database';
 import {
 	Plus,
 	Mail,
@@ -13,12 +18,14 @@ import {
 	X,
 	Check as CheckIcon,
 	Info,
+	ListRestart,
 } from 'lucide-react';
 import ReceivableForm from './ReceivableForm';
 import ReceivableEditForm from './ReceivableEditForm';
 import ReminderSettingsModal from './ReminderSettingsModal';
 import { sendManualReminder } from '../../lib/reminderService';
 import CSVImportModal from './CSVImportModal';
+import ReminderHistory from './ReminderHistory';
 
 function ReceivablesList() {
 	const [receivables, setReceivables] = useState<
@@ -41,6 +48,9 @@ function ReceivablesList() {
 	>(null);
 	const [deleting, setDeleting] = useState(false);
 	const [tooltipVisible, setTooltipVisible] = useState<string | null>(null);
+	const [showReminderHistory, setShowReminderHistory] = useState(false);
+	const [reminderHistroy, setReminderHistory] = useState<Reminder[]>([]);
+	const [showEditForm, setShowEditForm] = useState(false);
 	const [reminderProfiles, setReminderProfiles] = useState<ReminderProfile[]>(
 		[]
 	);
@@ -60,12 +70,20 @@ function ReceivablesList() {
 			const { data: reminderPorfile } = await supabase
 				.from('reminder_profile')
 				.select()
-				.eq('name', 'Default')
 				.eq('owner_id', user.id);
 			setReminderProfiles(reminderPorfile || []);
 
 			if (error) throw error;
 			setReceivables(data || []);
+
+			const { data: reminderHistroyData, error: reminderHistroyError } =
+				await supabase
+					.from('reminders')
+					.select('*')
+					.order('reminder_date', { ascending: false });
+
+			if (reminderHistroyError) throw reminderHistroyError;
+			setReminderHistory(reminderHistroyData || []);
 		} catch (error) {
 			console.error('Erreur lors du chargement des créances:', error);
 			setError('Impossible de charger les créances');
@@ -234,6 +252,11 @@ function ReceivablesList() {
 		return new Date(dateString).toLocaleDateString('fr-FR');
 	};
 
+	const handleOnClose = () => {
+		setSelectedReceivable(null);
+		setShowReminderHistory(false);
+	};
+
 	if (loading) {
 		return (
 			<div className='flex items-center justify-center h-96'>
@@ -338,7 +361,10 @@ function ReceivablesList() {
 									<td className='px-6 py-4 whitespace-nowrap'>
 										<div className='flex space-x-3'>
 											<button
-												onClick={() => setSelectedReceivable(receivable)}
+												onClick={() => {
+													setShowEditForm(true);
+													setSelectedReceivable(receivable);
+												}}
 												className='text-blue-600 hover:text-blue-800'
 												title='Modifier'
 											>
@@ -386,6 +412,14 @@ function ReceivablesList() {
 												title='Paramètres de relance'
 											>
 												<Clock className='h-5 w-5' />
+											</button>
+											<button
+												onClick={() => {
+													setSelectedReceivable(receivable);
+													setShowReminderHistory(true);
+												}}
+											>
+												<ListRestart className='h-5 w-5' />
 											</button>
 											<button
 												onClick={() => handleDeleteClick(receivable)}
@@ -491,10 +525,13 @@ function ReceivablesList() {
 				/>
 			)}
 
-			{selectedReceivable && (
+			{selectedReceivable && showEditForm && (
 				<ReceivableEditForm
 					receivable={selectedReceivable}
-					onClose={() => setSelectedReceivable(null)}
+					onClose={() => {
+						setShowEditForm(false);
+						setSelectedReceivable(null);
+					}}
 					onReceivableUpdated={(updatedReceivable) => {
 						setReceivables(
 							receivables.map((r) =>
@@ -574,6 +611,13 @@ function ReceivablesList() {
 						</div>
 					</div>
 				</div>
+			)}
+			{showReminderHistory && selectedReceivable && (
+				<ReminderHistory
+					receivableId={selectedReceivable?.id}
+					reminders={reminderHistroy}
+					onClose={handleOnClose}
+				/>
 			)}
 		</div>
 	);
