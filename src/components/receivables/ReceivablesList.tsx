@@ -26,6 +26,7 @@ import ReminderSettingsModal from './ReminderSettingsModal';
 import { sendManualReminder } from '../../lib/reminderService';
 import CSVImportModal from './CSVImportModal';
 import ReminderHistory from './ReminderHistory';
+import { Link } from 'react-router-dom';
 
 function ReceivablesList() {
 	const [receivables, setReceivables] = useState<
@@ -54,6 +55,7 @@ function ReceivablesList() {
 	const [reminderProfiles, setReminderProfiles] = useState<ReminderProfile[]>(
 		[]
 	);
+
 	const fetchReceivables = async () => {
 		try {
 			const { data, error } = await supabase
@@ -268,7 +270,15 @@ function ReceivablesList() {
 	return (
 		<div className='p-6'>
 			<div className='flex justify-between items-center mb-6'>
-				<h1 className='text-2xl font-bold text-gray-900'>Créances</h1>
+				<div className='flex gap-4 items-center'>
+					<h1 className='text-2xl font-bold text-gray-900'>Créances</h1>
+					<Link to='/reminders' className='flex items-center h-16 px-4'>
+						<button className='bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2'>
+							{/* <Upload className='h-5 w-5' /> */}
+							Historique des relances
+						</button>
+					</Link>
+				</div>
 				<div className='flex gap-4'>
 					<button
 						onClick={() => setShowImportModal(true)}

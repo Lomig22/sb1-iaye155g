@@ -97,6 +97,7 @@ function App() {
 					<Route path='/receivables' element={<ReceivablesList />} />
 					<Route path='/unknown_clients' element={<UnknownClientList />} />
 					<Route path='/settings' element={<Settings />} />
+					<Route path='/reminders' element={<ReminderList />} />
 					<Route path='*' element={<Navigate to='/' replace />} />
 				</Route>
 			</Routes>
