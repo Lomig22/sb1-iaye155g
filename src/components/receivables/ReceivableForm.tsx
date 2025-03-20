@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Client } from '../../types/database';
-import { X, Upload, Plus } from 'lucide-react';
+import { X, Upload, FileUp } from 'lucide-react';
 
 interface ReceivableFormProps {
 	onClose: () => void;
@@ -21,6 +21,8 @@ export default function ReceivableForm({
 	const [clientEmails, setClientEmails] = useState<string[]>(
 		preselectedClient?.email ? preselectedClient.email.split(',') : []
 	);
+	const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+
 	const [formData, setFormData] = useState({
 		client_id: preselectedClient?.id || '',
 		invoice_number: '',
@@ -90,6 +92,21 @@ export default function ReceivableForm({
 
 			let clientId = formData.client_id;
 
+			// Upload the PDF file
+			let invoicePath = '';
+			if (uploadedFile) {
+				const { error: uploadError } = await supabase.storage
+					.from('invoices')
+					.upload(`${user.id}/${uploadedFile.name}`, uploadedFile, {
+						upsert: true,
+					});
+
+				if (uploadError) {
+					throw uploadError;
+				}
+				const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+				invoicePath = `${supabaseUrl}/storage/v1/object/public/invoices/${user.id}/${uploadedFile.name}`;
+			}
 			// Si c'est un nouveau client, le créer d'abord
 			if (isNewClient) {
 				const { data: newClient, error: clientError } = await supabase
@@ -135,6 +152,7 @@ export default function ReceivableForm({
 						owner_id: user.id,
 						created_at: new Date().toISOString(),
 						updated_at: new Date().toISOString(),
+						invoice_pdf_url: invoicePath ? invoicePath : undefined,
 					},
 				])
 				.select('*, client:clients(*)')
@@ -473,27 +491,49 @@ export default function ReceivableForm({
 							</label>
 							<div className='mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md'>
 								<div className='space-y-1 text-center'>
-									<Upload className='mx-auto h-12 w-12 text-gray-400' />
-									<div className='flex text-sm text-gray-600'>
-										<label
-											htmlFor='file-upload'
-											className='relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500'
-										>
-											<span>Télécharger un fichier</span>
-											<input
-												id='file-upload'
-												name='file-upload'
-												type='file'
-												className='sr-only'
-												accept='.pdf'
-												onChange={(e) => {
-													// Logique de téléchargement du fichier à implémenter
-													console.log('File selected:', e.target.files?.[0]);
-												}}
-											/>
-										</label>
-									</div>
-									<p className='text-xs text-gray-500'>PDF jusqu'à 10MB</p>
+									{uploadedFile ? (
+										<>
+											<FileUp className='mx-auto h-12 w-12 text-gray-400' />
+											<div className='flex text-sm text-gray-600'>
+												<label className='relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500 flex gap-2 items-center'>
+													<span>{uploadedFile.name}</span>
+													<button
+														type='button'
+														onClick={(event) => {
+															event.stopPropagation();
+															setUploadedFile(null);
+														}}
+													>
+														<X className='h-6 w-6' />
+													</button>
+												</label>
+											</div>
+										</>
+									) : (
+										<>
+											<Upload className='mx-auto h-12 w-12 text-gray-400' />
+											<div className='flex text-sm text-gray-600'>
+												<label
+													htmlFor='file-upload'
+													className='relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500'
+												>
+													<span>Télécharger un fichier</span>
+													<input
+														id='file-upload'
+														name='file-upload'
+														type='file'
+														className='sr-only'
+														accept='.pdf'
+														onChange={(e) => {
+															// Logique de téléchargement du fichier à implémenter
+															setUploadedFile(e.target.files?.[0] || null);
+														}}
+													/>
+												</label>
+											</div>
+											<p className='text-xs text-gray-500'>PDF jusqu'à 10MB</p>
+										</>
+									)}
 								</div>
 							</div>
 						</div>

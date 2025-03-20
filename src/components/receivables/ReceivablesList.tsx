@@ -19,6 +19,7 @@ import {
 	Check as CheckIcon,
 	Info,
 	ListRestart,
+	File,
 } from 'lucide-react';
 import ReceivableForm from './ReceivableForm';
 import ReceivableEditForm from './ReceivableEditForm';
@@ -432,6 +433,21 @@ function ReceivablesList() {
 											>
 												<ListRestart className='h-5 w-5' />
 											</button>
+											{receivable.invoice_pdf_url && (
+												<a
+													href={receivable.invoice_pdf_url}
+													target='_blank'
+													rel='noopenner noreferrer'
+													className='grid'
+												>
+													<button
+														className='text-gray-600 hover:text-gray-800'
+														title='View Invoice'
+													>
+														<File className='h-5 w-5' />
+													</button>
+												</a>
+											)}
 											<button
 												onClick={() => handleDeleteClick(receivable)}
 												className='text-red-600 hover:text-red-800'
