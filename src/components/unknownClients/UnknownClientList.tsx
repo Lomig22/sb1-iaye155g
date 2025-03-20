@@ -95,6 +95,16 @@ const UnknownClientList = ({
 		fetchClients();
 	};
 
+	const filteredClients = clients.filter((client) => {
+		const searchLower = searchTerm.toLowerCase();
+		return (
+			client.name.toLowerCase().includes(searchLower) ||
+			client.invoice_no.toLowerCase().includes(searchLower) ||
+			client.client_code.toString().includes(searchLower) ||
+			client.amount?.toString().includes(searchLower)
+		);
+	});
+
 	if (isLoading) {
 		return (
 			<div className='flex items-center justify-center h-96'>
@@ -132,10 +142,31 @@ const UnknownClientList = ({
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 									code client
 								</th>
+								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+									Montant
+								</th>
+								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+									Montant payé
+								</th>
+								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+									Date pièce
+								</th>
+								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+									Date d'échéance
+								</th>
+								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+									status
+								</th>
+								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+									Commentaire
+								</th>
+								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+									Date
+								</th>
 							</tr>
 						</thead>
 						<tbody className='bg-white divide-y divide-gray-200'>
-							{clients.map((client) => (
+							{filteredClients.map((client) => (
 								<tr key={client.id} className='hover:bg-gray-50'>
 									<td className='px-6 py-4 whitespace-nowrap text-sm font-medium'>
 										<div className='flex space-x-3'>
@@ -166,6 +197,27 @@ const UnknownClientList = ({
 									</td>
 									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
 										{client.name}
+									</td>
+									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
+										{client.amount}
+									</td>
+									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
+										{client.paid_amount}
+									</td>
+									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
+										{client.document_date}
+									</td>
+									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
+										{client.due_date}
+									</td>
+									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
+										{client.status}
+									</td>
+									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
+										{client.comment}
+									</td>
+									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
+										{client.date}
 									</td>
 								</tr>
 							))}

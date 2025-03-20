@@ -15,6 +15,12 @@ interface CSVMapping {
 	name: string;
 	client_code: string;
 	invoice_no: string;
+	amount: string;
+	paid_amount: string;
+	due_date: string;
+	document_date: string;
+	status: string;
+	date: string;
 }
 
 interface MappingField {
@@ -22,6 +28,44 @@ interface MappingField {
 	label: string;
 	required: boolean;
 }
+
+const formatDate = (dateStr: string): string | null => {
+	if (!dateStr) return null;
+
+	// Nettoyer la chaîne de date
+	dateStr = dateStr.trim();
+
+	// Essayer différents formats de date
+	let date: Date | null = null;
+
+	// Format DD/MM/YYYY ou DD/MM/YY
+	if (/^\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}$/.test(dateStr)) {
+		const parts = dateStr.split(/[\/\-\.]/);
+		// Si l'année est sur 2 chiffres, ajouter 20 devant (pour 20xx)
+		const year = parts[2].length === 2 ? '20' + parts[2] : parts[2];
+		date = new Date(
+			`${year}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`
+		);
+	}
+	// Format YYYY-MM-DD
+	else if (/^\d{4}[\/\-\.]\d{1,2}[\/\-\.]\d{1,2}$/.test(dateStr)) {
+		date = new Date(dateStr);
+	}
+	// Format MM/DD/YYYY (US)
+	else if (/^\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{4}$/.test(dateStr)) {
+		const parts = dateStr.split(/[\/\-\.]/);
+		// Essayer d'abord comme MM/DD/YYYY
+		date = new Date(
+			`${parts[2]}-${parts[0].padStart(2, '0')}-${parts[1].padStart(2, '0')}`
+		);
+	}
+
+	if (date && !isNaN(date.getTime())) {
+		return date.toISOString().split('T')[0];
+	}
+
+	return '';
+};
 
 const CSVImport = ({
 	onClose,
@@ -46,6 +90,12 @@ const CSVImport = ({
 		{ field: 'name', label: "Nom de l'entreprise", required: true },
 		{ field: 'client_code', label: 'Code Client', required: true },
 		{ field: 'invoice_no', label: 'Numéro de facture', required: true },
+		{ field: 'amount', label: 'Montant', required: false },
+		{ field: 'paid_amount', label: 'Montant réglé', required: false },
+		{ field: 'due_date', label: "Date d'échéance", required: false },
+		{ field: 'document_date', label: 'Date pièce', required: false },
+		{ field: 'status', label: 'Statut', required: false },
+		{ field: 'date', label: 'Date', required: false },
 	];
 
 	// Désactiver le défilement du body quand la modale est ouverte
@@ -57,25 +107,6 @@ const CSVImport = ({
 	}, []);
 
 	const handleMapping = async (header: string[]) => {
-		// const headerMap = new Map(
-		// 	header.map((item) => [columnMapping[item], true])
-		// );
-		// const missingHeaders: string[] = [];
-		// for (const expected of expectedHeaders) {
-		// 	if (!headerMap.has(columnMapping[expected.toLowerCase().trim()])) {
-		// 		missingHeaders.push(expected);
-		// 	}
-		// }
-
-		// if (missingHeaders.length > 0) {
-		// 	setError(
-		// 		`Le fichier CSV doit contenir une colonne "${missingHeaders.join(
-		// 			','
-		// 		)}" pour importer les données`
-		// 	);
-		// 	return;
-		// }
-
 		const autoMapping: Record<string, keyof CSVMapping> = {};
 		const { data: savedMapping } = await supabase
 			.from('profiles')
@@ -151,6 +182,19 @@ const CSVImport = ({
 			const clientCodeIndex = csvHeaders.findIndex(
 				(h) => mapping[h] === 'client_code'
 			);
+			const amountIndex = csvHeaders.findIndex((h) => mapping[h] === 'amount');
+			const paidAmountIndex = csvHeaders.findIndex(
+				(h) => mapping[h] === 'paid_amount'
+			);
+			const dueDateIndex = csvHeaders.findIndex(
+				(h) => mapping[h] === 'due_date'
+			);
+			const documentDateIndex = csvHeaders.findIndex(
+				(h) => mapping[h] === 'document_date'
+			);
+			const statusIndex = csvHeaders.findIndex((h) => mapping[h] === 'status');
+			const dateIndex = csvHeaders.findIndex((h) => mapping[h] === 'date');
+
 			if (clientIndex === -1 || invoiceIndex === -1 || clientCodeIndex === -1) {
 				setError('Colonnes obligatoires manquantes dans le fichier CSV');
 				return;
@@ -164,6 +208,12 @@ const CSVImport = ({
 					const clientName = row[clientIndex] || '';
 					const invoiceNumber = row[invoiceIndex] || '';
 					const clientCode = row[clientCodeIndex] || '';
+					const amount = row[amountIndex] || '0';
+					const paidAmount = row[paidAmountIndex] || '0';
+					const dueDate = formatDate(row[dueDateIndex] || '');
+					const documentDate = formatDate(row[documentDateIndex] || '');
+					const status = row[statusIndex] || '';
+					const date = formatDate(row[dateIndex] || '');
 
 					//shanaka (Finish)
 					// Si le client n'est pas trouvé, créer un nouveau client temporaire
@@ -174,6 +224,12 @@ const CSVImport = ({
 						invoice_no: invoiceNumber,
 						client_code: clientCode,
 						owner_id: userId,
+						amount: amount,
+						paid_amount: paidAmount,
+						due_date: dueDate,
+						document_date: documentDate,
+						status: status,
+						date: date,
 						created_at: new Date().toISOString(),
 						updated_at: new Date().toISOString(),
 					} as UnknownClient;
@@ -203,7 +259,18 @@ const CSVImport = ({
 			const clientCodeIndex = csvHeaders.findIndex(
 				(h) => mapping[h] === 'client_code'
 			);
-
+			const amountIndex = csvHeaders.findIndex((h) => mapping[h] === 'amount');
+			const paidAmountIndex = csvHeaders.findIndex(
+				(h) => mapping[h] === 'paid_amount'
+			);
+			const dueDateIndex = csvHeaders.findIndex(
+				(h) => mapping[h] === 'due_date'
+			);
+			const documentDateIndex = csvHeaders.findIndex(
+				(h) => mapping[h] === 'document_date'
+			);
+			const statusIndex = csvHeaders.findIndex((h) => mapping[h] === 'status');
+			const dateIndex = csvHeaders.findIndex((h) => mapping[h] === 'date');
 			// Préparer les créances à importer
 			const receivablesToImport = [];
 
@@ -216,6 +283,12 @@ const CSVImport = ({
 					//Shanaka(Finish)
 					const invoiceNumber = row[invoiceIndex] || '';
 					const clientCode = row[clientCodeIndex] || '0';
+					const amount = row[amountIndex] || '0';
+					const paidAmount = row[paidAmountIndex] || '0';
+					const dueDate = formatDate(row[dueDateIndex] || '');
+					const documentDate = formatDate(row[documentDateIndex] || '');
+					const status = row[statusIndex] || '';
+					const date = formatDate(row[dateIndex] || '');
 
 					// Vérifier que les données sont valides avant d'ajouter à la liste
 					if (
@@ -229,6 +302,12 @@ const CSVImport = ({
 							invoice_no: invoiceNumber,
 							client_code: clientCode,
 							owner_id: userId,
+							amount: amount,
+							paid_amount: paidAmount,
+							due_date: dueDate,
+							document_date: documentDate,
+							status: status,
+							date: date,
 							created_at: new Date().toISOString(),
 							updated_at: new Date().toISOString(),
 						});
@@ -546,6 +625,24 @@ const CSVImport = ({
 											<th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 												code client
 											</th>
+											<th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+												Montant
+											</th>
+											<th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+												Montant payé
+											</th>
+											<th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+												Date pièce
+											</th>
+											<th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+												Date d'échéance
+											</th>
+											<th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+												status
+											</th>
+											<th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+												Date
+											</th>
 										</tr>
 									</thead>
 									<tbody className='bg-white divide-y divide-gray-200'>
@@ -559,6 +656,24 @@ const CSVImport = ({
 												</td>
 												<td className='px-4 py-3 whitespace-nowrap text-sm text-gray-900'>
 													{receivable.client_code}
+												</td>
+												<td className='px-4 py-3 whitespace-nowrap text-sm text-gray-900'>
+													{receivable.amount}
+												</td>
+												<td className='px-4 py-3 whitespace-nowrap text-sm text-gray-900'>
+													{receivable.paid_amount}
+												</td>
+												<td className='px-4 py-3 whitespace-nowrap text-sm text-gray-900'>
+													{receivable.document_date}
+												</td>
+												<td className='px-4 py-3 whitespace-nowrap text-sm text-gray-900'>
+													{receivable.due_date}
+												</td>
+												<td className='px-4 py-3 whitespace-nowrap text-sm text-gray-900'>
+													{receivable.status}
+												</td>
+												<td className='px-4 py-3 whitespace-nowrap text-sm text-gray-900'>
+													{receivable.date}
 												</td>
 											</tr>
 										))}
