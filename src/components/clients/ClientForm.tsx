@@ -76,7 +76,9 @@ export default function ClientForm({
 					.eq('owner_id', user.id);
 
 				const reminderProfileExist =
-					reminderPorfile !== null && reminderPorfile[0] !== null;
+					reminderPorfile !== null &&
+					reminderPorfile[0] !== null &&
+					reminderPorfile.length > 0;
 
 				const { data, error } = await supabase
 					.from('clients')

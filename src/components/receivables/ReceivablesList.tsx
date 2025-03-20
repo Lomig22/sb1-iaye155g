@@ -274,6 +274,7 @@ function ReceivablesList() {
 					<h1 className='text-2xl font-bold text-gray-900'>Créances</h1>
 					<Link to='/reminders' className='flex items-center h-16 px-4'>
 						<button className='bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2'>
+							<Clock className='h-5 w-5' />
 							{/* <Upload className='h-5 w-5' /> */}
 							Historique des relances
 						</button>

@@ -242,7 +242,7 @@ const CSVImport = ({
 			// Importer les créances par lots de 20 pour éviter les problèmes de performance
 			const batchSize = 20;
 			let successCount = 0;
-
+			let insertError = false;
 			for (let i = 0; i < receivablesToImport.length; i += batchSize) {
 				const batch = receivablesToImport.slice(i, i + batchSize);
 
@@ -262,6 +262,7 @@ const CSVImport = ({
 					if (error) {
 						console.error("Erreur lors de l'import du lot:", error);
 						// Continue with next batch instead of throwing
+						insertError = true;
 					} else {
 						successCount += batch.length;
 					}
@@ -270,9 +271,13 @@ const CSVImport = ({
 				} catch (err) {
 					console.error("Exception lors de l'import du lot:", err);
 					// Continue with next batch
+					insertError = true;
 				}
 			}
 
+			if (insertError) {
+				throw new Error("Aucune créance n'a pu être importée");
+			}
 			// Delete lines that were not in the csv
 			const prevItems = new Set(
 				receivablesToImport.map(
@@ -354,7 +359,6 @@ const CSVImport = ({
 			setMapping({ ...mapping, [header]: field });
 		}
 	};
-
 	return (
 		<div className='fixed inset-0 bg-gray-600 bg-opacity-50 z-50 overflow-y-auto'>
 			<div className='min-h-screen py-8 px-4 flex items-center justify-center'>
@@ -479,14 +483,23 @@ const CSVImport = ({
 							</div>
 
 							<div className='flex justify-between space-x-4'>
-								<button
-									onClick={saveMapping}
-									className='px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors flex'
-									disabled={savingSchema}
-								>
-									{savingSchema && <Loader2 className='animate-spin' />}
-									Sauvegarder
-								</button>
+								<div className='flex gap-4'>
+									<button
+										onClick={saveMapping}
+										className='px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors flex'
+										disabled={savingSchema}
+									>
+										{savingSchema && <Loader2 className='animate-spin' />}
+										Sauvegarder
+									</button>
+									<button
+										onClick={() => setMapping({})}
+										className='px-4 py-2 border border-red-300 rounded-md text-red-700 hover:bg-red-50 transition-colors flex'
+										disabled={savingSchema}
+									>
+										Réinitialiser
+									</button>
+								</div>
 								<div className='flex gap-4'>
 									<button
 										onClick={resetForm}

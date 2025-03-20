@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Client, Receivable, Reminder } from '../../types/database';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, FileText } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const ReminderList = () => {
 	const [isLoading, setIsLoading] = useState(true);
@@ -47,8 +48,14 @@ const ReminderList = () => {
 
 	return (
 		<div className='p-6'>
-			<div className='flex justify-between items-center mb-6'>
+			<div className='flex gap-4 items-center mb-6'>
 				<h1 className='text-2xl font-bold text-gray-900'>Relance</h1>
+				<Link to='/receivables' className='flex items-center h-16 px-4'>
+					<button className='bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2'>
+						<FileText className='h-5 w-5' />
+						Créances
+					</button>
+				</Link>
 			</div>
 
 			{error && (

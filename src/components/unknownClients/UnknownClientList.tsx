@@ -1,30 +1,33 @@
-import {
-	AlertCircle,
-	Check,
-	Edit,
-	Plus,
-	Search,
-	Trash2,
-	Upload,
-	X,
-} from 'lucide-react';
+import { Edit, Search, Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { UnknownClient } from '../../types/database';
 import { supabase } from '../../lib/supabase';
 import UnknownClientForm from './UnknownClientForm';
 import CSVImport from './CSVImport';
 
-const UnknownClientList = () => {
+type UnknownClientListProps = {
+	setError: (error: string | null) => void;
+	setImportSuccess: (message: string | null) => void;
+	showImportModal: boolean;
+	setShowImportModal: (show: boolean) => void;
+	showForm: boolean;
+	setShowForm: (show: boolean) => void;
+};
+
+const UnknownClientList = ({
+	setError,
+	setImportSuccess,
+	showImportModal,
+	setShowImportModal,
+	showForm,
+	setShowForm,
+}: UnknownClientListProps) => {
 	const [isLoading, setIsLoading] = useState(true);
-	const [error, setError] = useState<string | null>(null);
-	const [importSuccess, setImportSuccess] = useState<string | null>(null);
-	const [showImportModal, setShowImportModal] = useState(false);
 	const [searchTerm, setSearchTerm] = useState('');
 	const [clients, setClients] = useState<UnknownClient[]>([]);
 	const [selectedClient, setSelectedClient] = useState<UnknownClient | null>(
 		null
 	);
-	const [showForm, setShowForm] = useState(false);
 	const [userId, setUserId] = useState<string | null>(null);
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const [deleting, setDeleting] = useState(false);
@@ -100,42 +103,7 @@ const UnknownClientList = () => {
 		);
 	}
 	return (
-		<div className='p-6'>
-			<div className='flex justify-between items-center mb-6'>
-				<h1 className='text-2xl font-bold text-gray-900'>Clients inconnus</h1>
-				<div className='flex gap-4'>
-					<button
-						onClick={() => setShowImportModal(true)}
-						className='bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center gap-2'
-					>
-						<Upload className='h-5 w-5' />
-						Importer CSV
-					</button>
-
-					<button
-						onClick={() => setShowForm(true)}
-						className='bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2'
-					>
-						<Plus className='h-5 w-5' />
-						Nouveau client
-					</button>
-				</div>
-			</div>
-
-			{error && (
-				<div className='mb-4 p-4 bg-red-50 border border-red-200 rounded-md text-red-700 flex items-center'>
-					<AlertCircle className='h-5 w-5 mr-2' />
-					{error}
-				</div>
-			)}
-
-			{importSuccess && (
-				<div className='mb-4 p-4 bg-green-50 border border-green-200 rounded-md text-green-700 flex items-center'>
-					<Check className='h-5 w-5 mr-2' />
-					{importSuccess}
-				</div>
-			)}
-
+		<>
 			<div className='relative mb-6'>
 				<Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5' />
 				<input
@@ -295,7 +263,7 @@ const UnknownClientList = () => {
 					unknownClientData={clients}
 				/>
 			)}
-		</div>
+		</>
 	);
 };
 

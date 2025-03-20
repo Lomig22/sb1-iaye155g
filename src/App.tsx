@@ -18,6 +18,7 @@ import ReceivablesList from './components/receivables/ReceivablesList';
 import Settings from './components/settings/Settings';
 import UnknownClientList from './components/unknownClients/UnknownClientList';
 import ReminderList from './components/reminders/ReminderList';
+import ClientPage from './components/clients/ClientPage';
 
 function App() {
 	const [user, setUser] = useState<User | null>(null);
@@ -93,7 +94,7 @@ function App() {
 			<Routes>
 				<Route element={<Layout />}>
 					<Route path='/' element={<Dashboard />} />
-					<Route path='/clients' element={<ClientList />} />
+					<Route path='/clients' element={<ClientPage />} />
 					<Route path='/receivables' element={<ReceivablesList />} />
 					<Route path='/unknown_clients' element={<UnknownClientList />} />
 					<Route path='/settings' element={<Settings />} />
