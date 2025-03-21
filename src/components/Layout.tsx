@@ -61,7 +61,6 @@ export default function Layout() {
 	const navigation = [
 		{ name: 'Tableau de bord', href: '/', icon: Home },
 		{ name: 'Clients', href: '/clients', icon: Users },
-		{ name: 'Clients inconnus', href: '/unknown_clients', icon: FileQuestion },
 		{ name: 'Créances', href: '/receivables', icon: FileText },
 		{ name: 'Paramètres', href: '/settings', icon: Settings },
 	];

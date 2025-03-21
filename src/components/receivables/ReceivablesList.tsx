@@ -19,13 +19,22 @@ import {
 	Check as CheckIcon,
 	Info,
 	ListRestart,
+	File,
 } from 'lucide-react';
 import ReceivableForm from './ReceivableForm';
 import ReceivableEditForm from './ReceivableEditForm';
 import ReminderSettingsModal from './ReminderSettingsModal';
 import { sendManualReminder } from '../../lib/reminderService';
-import CSVImportModal from './CSVImportModal';
+import CSVImportModal, { CSVMapping } from './CSVImportModal';
 import ReminderHistory from './ReminderHistory';
+import { Link } from 'react-router-dom';
+import { dateCompare, numberCompare, stringCompare } from '../../lib/comparers';
+import SortableColHead from '../Common/SortableColHead';
+
+type SortColumnConfig = {
+	key: keyof CSVMapping | 'client' | 'email';
+	sort: 'none' | 'asc' | 'desc';
+};
 
 function ReceivablesList() {
 	const [receivables, setReceivables] = useState<
@@ -54,6 +63,11 @@ function ReceivablesList() {
 	const [reminderProfiles, setReminderProfiles] = useState<ReminderProfile[]>(
 		[]
 	);
+	const [sortConfig, setSortConfig] = useState<SortColumnConfig | null>({
+		key: 'client',
+		sort: 'asc',
+	});
+
 	const fetchReceivables = async () => {
 		try {
 			const { data, error } = await supabase
@@ -230,15 +244,6 @@ function ReceivablesList() {
 		setShowImportModal(false);
 	};
 
-	const filteredReceivables = receivables.filter((receivable) => {
-		const searchLower = searchTerm.toLowerCase();
-		return (
-			receivable.client.company_name.toLowerCase().includes(searchLower) ||
-			receivable.invoice_number.toLowerCase().includes(searchLower) ||
-			receivable.amount.toString().includes(searchLower)
-		);
-	});
-
 	const handleMouseEnter = (receivableId: string) => {
 		setTooltipVisible(receivableId);
 	};
@@ -257,6 +262,75 @@ function ReceivablesList() {
 		setShowReminderHistory(false);
 	};
 
+	const handleSortOnClick = (key: keyof CSVMapping) => {
+		if (sortConfig?.key === key) {
+			setSortConfig({
+				...sortConfig,
+				sort: sortConfig.sort === 'asc' ? 'desc' : 'asc',
+			});
+		} else {
+			setSortConfig({
+				key,
+				sort: 'asc',
+			});
+		}
+	};
+
+	const applySorting = (
+		a: Receivable & { client: Client },
+		b: Receivable & { client: Client }
+	) => {
+		if (!sortConfig) return 0;
+		const { key, sort } = sortConfig;
+
+		if (key === 'client') {
+			return stringCompare(a.client.company_name, b.client.company_name, sort);
+		}
+		if (key === 'client_code') {
+			return stringCompare(a.client.client_code, b.client.client_code, sort);
+		}
+		if (key === 'email') {
+			return stringCompare(a.email ?? '', b.email ?? '', sort);
+		}
+		if (key === 'invoice_number') {
+			return stringCompare(a.invoice_number, b.invoice_number, sort);
+		}
+		if (key === 'amount') {
+			return numberCompare(a.amount, b.amount, sort);
+		}
+		if (key === 'paid_amount') {
+			return numberCompare(a.paid_amount ?? 0, b.paid_amount ?? 0, sort);
+		}
+		if (key === 'status') {
+			return stringCompare(a.status ?? '', b.status ?? '', sort);
+		}
+		if (key === 'document_date') {
+			return dateCompare(a.document_date ?? '', b.document_date ?? '', sort);
+		}
+		if (key === 'due_date') {
+			return dateCompare(a.due_date ?? '', b.due_date ?? '', sort);
+		}
+		if (key === 'installment_number') {
+			return stringCompare(
+				a.installment_number ?? '',
+				b.installment_number ?? '',
+				sort
+			);
+		}
+
+		return 0;
+	};
+
+	const filteredReceivables = receivables
+		.filter((receivable) => {
+			const searchLower = searchTerm.toLowerCase();
+			return (
+				receivable.client.company_name.toLowerCase().includes(searchLower) ||
+				receivable.invoice_number.toLowerCase().includes(searchLower) ||
+				receivable.amount.toString().includes(searchLower)
+			);
+		})
+		.sort(applySorting);
 	if (loading) {
 		return (
 			<div className='flex items-center justify-center h-96'>
@@ -268,7 +342,16 @@ function ReceivablesList() {
 	return (
 		<div className='p-6'>
 			<div className='flex justify-between items-center mb-6'>
-				<h1 className='text-2xl font-bold text-gray-900'>Créances</h1>
+				<div className='flex gap-4 items-center'>
+					<h1 className='text-2xl font-bold text-gray-900'>Créances</h1>
+					<Link to='/reminders' className='flex items-center h-16 px-4'>
+						<button className='bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2'>
+							<Clock className='h-5 w-5' />
+							{/* <Upload className='h-5 w-5' /> */}
+							Historique des relances
+						</button>
+					</Link>
+				</div>
 				<div className='flex gap-4'>
 					<button
 						onClick={() => setShowImportModal(true)}
@@ -321,37 +404,120 @@ function ReceivablesList() {
 									Actions
 								</th>
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									Client
+									<SortableColHead
+										colKey='client'
+										label='Client'
+										onClick={(col: string) =>
+											handleSortOnClick(col as keyof CSVMapping)
+										}
+										selectedColKey={sortConfig?.key ?? ''}
+										sort={sortConfig?.sort ?? 'none'}
+									/>
 								</th>
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									Code Client
+									<SortableColHead
+										colKey='client_code'
+										label='Code Client'
+										onClick={(col: string) =>
+											handleSortOnClick(col as keyof CSVMapping)
+										}
+										selectedColKey={sortConfig?.key ?? ''}
+										sort={sortConfig?.sort ?? 'none'}
+									/>
 								</th>
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									Email
+									<SortableColHead
+										colKey='email'
+										label='Email'
+										onClick={(col: string) =>
+											handleSortOnClick(col as keyof CSVMapping)
+										}
+										selectedColKey={sortConfig?.key ?? ''}
+										sort={sortConfig?.sort ?? 'none'}
+									/>
 								</th>
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									Facture
+									<SortableColHead
+										colKey='invoice_number'
+										label='Facture'
+										onClick={(col: string) =>
+											handleSortOnClick(col as keyof CSVMapping)
+										}
+										selectedColKey={sortConfig?.key ?? ''}
+										sort={sortConfig?.sort ?? 'none'}
+									/>
 								</th>
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									Montant devise
+									<SortableColHead
+										colKey='amount'
+										label='Montant devise'
+										onClick={(col: string) =>
+											handleSortOnClick(col as keyof CSVMapping)
+										}
+										selectedColKey={sortConfig?.key ?? ''}
+										sort={sortConfig?.sort ?? 'none'}
+									/>
 								</th>
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									Montant Réglé devise
+									<SortableColHead
+										colKey='paid_amount'
+										label='Montant Réglé devise'
+										onClick={(col: string) =>
+											handleSortOnClick(col as keyof CSVMapping)
+										}
+										selectedColKey={sortConfig?.key ?? ''}
+										sort={sortConfig?.sort ?? 'none'}
+									/>
 								</th>
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									Date pièce
+									<SortableColHead
+										colKey='document_date'
+										label='Date pièce'
+										onClick={(col: string) =>
+											handleSortOnClick(col as keyof CSVMapping)
+										}
+										selectedColKey={sortConfig?.key ?? ''}
+										sort={sortConfig?.sort ?? 'none'}
+									/>
 								</th>
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									Échéance
+									<SortableColHead
+										colKey='due_date'
+										label='Échéance'
+										onClick={(col: string) =>
+											handleSortOnClick(col as keyof CSVMapping)
+										}
+										selectedColKey={sortConfig?.key ?? ''}
+										sort={sortConfig?.sort ?? 'none'}
+									/>
 								</th>
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									Numéro échéance
+									<SortableColHead
+										colKey='installment_number'
+										label='Numéro échéance'
+										onClick={(col: string) =>
+											handleSortOnClick(col as keyof CSVMapping)
+										}
+										selectedColKey={sortConfig?.key ?? ''}
+										sort={sortConfig?.sort ?? 'none'}
+									/>
 								</th>
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									Statut
+									<SortableColHead
+										colKey='status'
+										label='Statut'
+										onClick={(col: string) =>
+											handleSortOnClick(col as keyof CSVMapping)
+										}
+										selectedColKey={sortConfig?.key ?? ''}
+										sort={sortConfig?.sort ?? 'none'}
+									/>
 								</th>
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 									Commentaire
+								</th>
+								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+									Invoice
 								</th>
 							</tr>
 						</thead>
@@ -497,6 +663,25 @@ function ReceivablesList() {
 									</td>
 									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
 										{receivable.notes || '-'}
+									</td>
+									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+										{receivable.invoice_pdf_url ? (
+											<a
+												href={receivable.invoice_pdf_url}
+												target='_blank'
+												rel='noopenner noreferrer'
+												className='grid'
+											>
+												<button
+													className='text-gray-600 hover:text-gray-800'
+													title='View Invoice'
+												>
+													<File className='h-5 w-5' />
+												</button>
+											</a>
+										) : (
+											'-'
+										)}
 									</td>
 								</tr>
 							))}

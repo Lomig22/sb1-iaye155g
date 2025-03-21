@@ -27,6 +27,13 @@ const UnknownClientForm = ({
 		name: client?.name ?? '',
 		invoice_no: client?.invoice_no ?? '',
 		client_code: client?.client_code ?? '',
+		amount: client?.amount ?? '0',
+		paid_amount: client?.paid_amount ?? '0',
+		due_date: client?.due_date ?? '',
+		document_date: client?.document_date ?? '',
+		status: client?.status ?? '',
+		comment: client?.comment ?? '',
+		date: client?.date ?? '',
 	});
 
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -49,7 +56,7 @@ const UnknownClientForm = ({
 			} else if (mode === 'edit') {
 				const { data: updatedClient, error } = await supabase
 					.from('unknown_client')
-					.update(formData)
+					.update({ ...formData, status: 'pending' })
 					.eq('id', client?.id)
 					.select();
 
@@ -128,6 +135,84 @@ const UnknownClientForm = ({
 								value={formData.invoice_no}
 								onChange={(e) =>
 									setFormData({ ...formData, invoice_no: e.target.value })
+								}
+								className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+							/>
+						</div>
+						<div>
+							<label className='block text-sm font-medium text-gray-700 mb-2'>
+								Montant
+							</label>
+							<input
+								type='number'
+								value={formData.amount}
+								onChange={(e) =>
+									setFormData({ ...formData, amount: e.target.value })
+								}
+								className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+							/>
+						</div>
+						<div>
+							<label className='block text-sm font-medium text-gray-700 mb-2'>
+								Montant payé
+							</label>
+							<input
+								type='number'
+								value={formData.paid_amount}
+								onChange={(e) =>
+									setFormData({ ...formData, paid_amount: e.target.value })
+								}
+								className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+							/>
+						</div>
+						<div>
+							<label className='block text-sm font-medium text-gray-700 mb-2'>
+								Date pièce
+							</label>
+							<input
+								type='date'
+								value={formData.document_date}
+								onChange={(e) =>
+									setFormData({ ...formData, document_date: e.target.value })
+								}
+								className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+							/>
+						</div>
+						<div>
+							<label className='block text-sm font-medium text-gray-700 mb-2'>
+								Date d'échéance *
+							</label>
+							<input
+								type='date'
+								value={formData.due_date}
+								onChange={(e) =>
+									setFormData({ ...formData, due_date: e.target.value })
+								}
+								className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+							/>
+						</div>
+						<div>
+							<label className='block text-sm font-medium text-gray-700 mb-2'>
+								Date
+							</label>
+							<input
+								type='date'
+								value={formData.date}
+								onChange={(e) =>
+									setFormData({ ...formData, date: e.target.value })
+								}
+								className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+							/>
+						</div>
+						<div>
+							<label className='block text-sm font-medium text-gray-700 mb-2'>
+								Commentaire
+							</label>
+							<input
+								type='text'
+								value={formData.comment}
+								onChange={(e) =>
+									setFormData({ ...formData, comment: e.target.value })
 								}
 								className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
 							/>

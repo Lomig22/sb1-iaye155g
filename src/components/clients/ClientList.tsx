@@ -1,35 +1,54 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Client, ReminderProfile } from '../../types/database';
-import {
-	Plus,
-	Search,
-	Edit,
-	AlertCircle,
-	Trash2,
-	X,
-	Upload,
-	Check,
-	Info,
-} from 'lucide-react';
+import { Search, Edit, Trash2, X, Info } from 'lucide-react';
 import ClientForm from './ClientForm';
-import CSVImportModal from './CSVImportModal';
+import CSVImportModal, { CSVMapping } from './CSVImportModal';
+import SortableColHead from '../Common/SortableColHead';
+import {
+	booleanCompare,
+	dateCompare,
+	stringCompare,
+} from '../../lib/comparers';
 
-function ClientList() {
+type ClientListProps = {
+	showForm: boolean;
+	setShowForm: (show: boolean) => void;
+	showImportModal: boolean;
+	setShowImportModal: (show: boolean) => void;
+	setError: (error: string | null) => void;
+	setImportSuccess: (message: string | null) => void;
+	importSuccess: string | null;
+};
+
+type SortColumnConfig = {
+	key: keyof CSVMapping;
+	sort: 'none' | 'asc' | 'desc';
+};
+
+function ClientList({
+	showForm,
+	setShowForm,
+	showImportModal,
+	setShowImportModal,
+	setError,
+	importSuccess,
+	setImportSuccess,
+}: ClientListProps) {
 	const [clients, setClients] = useState<
 		(Client & { reminderProfile?: ReminderProfile })[]
 	>([]);
 	const [loading, setLoading] = useState(true);
 	const [searchTerm, setSearchTerm] = useState('');
-	const [showForm, setShowForm] = useState(false);
 	const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-	const [error, setError] = useState<string | null>(null);
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
 	const [deleting, setDeleting] = useState(false);
-	const [showImportModal, setShowImportModal] = useState(false);
-	const [importSuccess, setImportSuccess] = useState<string | null>(null);
 	const [tooltipVisible, setTooltipVisible] = useState<string | null>(null);
+	const [sortConfig, setSortConfig] = useState<SortColumnConfig | null>({
+		key: 'company_name',
+		sort: 'asc',
+	});
 
 	const fetchClients = async () => {
 		try {
@@ -103,16 +122,6 @@ function ClientList() {
 		setShowImportModal(false);
 	};
 
-	const filteredClients = clients.filter((client) => {
-		const searchLower = searchTerm.toLowerCase();
-		return (
-			client.email.toLowerCase().includes(searchLower) ||
-			client.company_name.toLowerCase().includes(searchLower) ||
-			(client.phone && client.phone.toLowerCase().includes(searchLower)) ||
-			(client.city && client.city.toLowerCase().includes(searchLower))
-		);
-	});
-
 	const handleMouseEnter = (clientId: string) => {
 		setTooltipVisible(clientId);
 	};
@@ -138,42 +147,64 @@ function ClientList() {
 		const splitMail = emails.split(',');
 		return splitMail.length > 1 ? `${splitMail[0]}...` : splitMail[0];
 	};
+
+	const handleSortOnClick = (key: keyof CSVMapping) => {
+		if (sortConfig?.key === key) {
+			setSortConfig({
+				...sortConfig,
+				sort: sortConfig.sort === 'asc' ? 'desc' : 'asc',
+			});
+		} else {
+			setSortConfig({
+				key,
+				sort: 'asc',
+			});
+		}
+	};
+
+	const applySorting = (
+		a: Client & { reminderProfile?: ReminderProfile },
+		b: Client & { reminderProfile?: ReminderProfile }
+	) => {
+		if (!sortConfig) return 0;
+		const { key, sort } = sortConfig;
+
+		if (key === 'company_name') {
+			return stringCompare(a.company_name, b.company_name, sort);
+		}
+		if (key === 'client_code') {
+			return stringCompare(a.client_code, b.client_code, sort);
+		}
+		if (key === 'email') {
+			return stringCompare(a.email, b.email, sort);
+		}
+		if (key === 'needs_reminder') {
+			return booleanCompare(a.needs_reminder, b.needs_reminder, sort);
+		}
+		if (key === 'created_at') {
+			return dateCompare(a.created_at, b.created_at, sort);
+		}
+		if (key === 'updated_at') {
+			return dateCompare(a.updated_at, b.updated_at, sort);
+		}
+
+		return 0;
+	};
+
+	const filteredClients = clients
+		.filter((client) => {
+			const searchLower = searchTerm.toLowerCase();
+			return (
+				client.email.toLowerCase().includes(searchLower) ||
+				client.company_name.toLowerCase().includes(searchLower) ||
+				(client.phone && client.phone.toLowerCase().includes(searchLower)) ||
+				(client.city && client.city.toLowerCase().includes(searchLower))
+			);
+		})
+		.sort(applySorting);
+
 	return (
-		<div className='p-6'>
-			<div className='flex justify-between items-center mb-6'>
-				<h1 className='text-2xl font-bold text-gray-900'>Clients</h1>
-				<div className='flex gap-4'>
-					<button
-						onClick={() => setShowImportModal(true)}
-						className='bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center gap-2'
-					>
-						<Upload className='h-5 w-5' />
-						Importer CSV
-					</button>
-					<button
-						onClick={() => setShowForm(true)}
-						className='bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2'
-					>
-						<Plus className='h-5 w-5' />
-						Nouveau client
-					</button>
-				</div>
-			</div>
-
-			{error && (
-				<div className='mb-4 p-4 bg-red-50 border border-red-200 rounded-md text-red-700 flex items-center'>
-					<AlertCircle className='h-5 w-5 mr-2' />
-					{error}
-				</div>
-			)}
-
-			{importSuccess && (
-				<div className='mb-4 p-4 bg-green-50 border border-green-200 rounded-md text-green-700 flex items-center'>
-					<Check className='h-5 w-5 mr-2' />
-					{importSuccess}
-				</div>
-			)}
-
+		<>
 			<div className='relative mb-6'>
 				<Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5' />
 				<input
@@ -193,14 +224,38 @@ function ClientList() {
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 									Actions
 								</th>
-								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									Entreprise
+								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide'>
+									<SortableColHead
+										colKey='company_name'
+										label='Entreprise'
+										onClick={(col: string) =>
+											handleSortOnClick(col as keyof CSVMapping)
+										}
+										selectedColKey={sortConfig?.key ?? ''}
+										sort={sortConfig?.sort ?? 'none'}
+									/>
 								</th>
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									Code Client
+									<SortableColHead
+										colKey='client_code'
+										label='Code Client'
+										onClick={(col: string) =>
+											handleSortOnClick(col as keyof CSVMapping)
+										}
+										selectedColKey={sortConfig?.key ?? ''}
+										sort={sortConfig?.sort ?? 'none'}
+									/>
 								</th>
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									Email
+									<SortableColHead
+										colKey='email'
+										label='Email'
+										onClick={(col: string) =>
+											handleSortOnClick(col as keyof CSVMapping)
+										}
+										selectedColKey={sortConfig?.key ?? ''}
+										sort={sortConfig?.sort ?? 'none'}
+									/>
 								</th>
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 									Téléphone
@@ -224,16 +279,40 @@ function ClientList() {
 									Site web
 								</th>
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									Créé le
+									<SortableColHead
+										colKey='created_at'
+										label='Créé le'
+										onClick={(col: string) =>
+											handleSortOnClick(col as keyof CSVMapping)
+										}
+										selectedColKey={sortConfig?.key ?? ''}
+										sort={sortConfig?.sort ?? 'none'}
+									/>
 								</th>
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									Mis à jour
+									<SortableColHead
+										colKey='updated_at'
+										label='Mis à jour'
+										onClick={(col: string) =>
+											handleSortOnClick(col as keyof CSVMapping)
+										}
+										selectedColKey={sortConfig?.key ?? ''}
+										sort={sortConfig?.sort ?? 'none'}
+									/>
 								</th>
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 									Profil de rappel
 								</th>
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									Relance
+									<SortableColHead
+										colKey='needs_reminder'
+										label='Relance'
+										onClick={(col: string) =>
+											handleSortOnClick(col as keyof CSVMapping)
+										}
+										selectedColKey={sortConfig?.key ?? ''}
+										sort={sortConfig?.sort ?? 'none'}
+									/>
 								</th>
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 									Commentaire
@@ -448,7 +527,7 @@ function ClientList() {
 					onImportSuccess={handleImportSuccess}
 				/>
 			)}
-		</div>
+		</>
 	);
 }
 

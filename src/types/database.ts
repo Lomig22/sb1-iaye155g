@@ -89,4 +89,11 @@ export interface UnknownClient {
 	client_code: string;
 	created_at?: string;
 	updated_at?: string;
+	amount?: string;
+	paid_amount?: string;
+	due_date?: string;
+	document_date?: string;
+	status?: string;
+	comment?: string;
+	date?: string;
 }
