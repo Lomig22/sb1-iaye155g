@@ -8,7 +8,7 @@ interface CSVImportModalProps {
 	onImportSuccess: (importedCount: number) => void;
 }
 
-interface CSVMapping {
+export interface CSVMapping {
 	company_name: string;
 	client_code: string;
 	email: string;
