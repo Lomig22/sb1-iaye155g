@@ -15,7 +15,7 @@ interface MappingField {
 	required: boolean;
 }
 
-interface CSVMapping {
+export interface CSVMapping {
 	client: string;
 	invoice_number: string;
 	amount: string;

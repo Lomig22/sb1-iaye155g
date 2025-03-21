@@ -28,7 +28,7 @@ const ReminderHistory = ({
 					>
 						<X className='h-6 w-6' />
 					</button>
-					<h2 className='text-2xl font-bold mb-2'>Reminder History</h2>
+					<h2 className='text-2xl font-bold mb-2'>Historique des relances</h2>
 					<div className='overflow-x-auto'>
 						<table className='min-w-full divide-y divide-gray-200'>
 							<thead className='bg-gray-50'>
