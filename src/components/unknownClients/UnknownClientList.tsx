@@ -3,7 +3,9 @@ import { useEffect, useState } from 'react';
 import { UnknownClient } from '../../types/database';
 import { supabase } from '../../lib/supabase';
 import UnknownClientForm from './UnknownClientForm';
-import CSVImport from './CSVImport';
+import CSVImport, { CSVMapping } from './CSVImport';
+import { dateCompare, numberCompare, stringCompare } from '../../lib/comparers';
+import SortableColHead from '../Common/SortableColHead';
 
 type UnknownClientListProps = {
 	setError: (error: string | null) => void;
@@ -12,6 +14,11 @@ type UnknownClientListProps = {
 	setShowImportModal: (show: boolean) => void;
 	showForm: boolean;
 	setShowForm: (show: boolean) => void;
+};
+
+type SortColumnConfig = {
+	key: keyof CSVMapping;
+	sort: 'none' | 'asc' | 'desc';
 };
 
 const UnknownClientList = ({
@@ -31,6 +38,10 @@ const UnknownClientList = ({
 	const [userId, setUserId] = useState<string | null>(null);
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const [deleting, setDeleting] = useState(false);
+	const [sortConfig, setSortConfig] = useState<SortColumnConfig | null>({
+		key: 'name',
+		sort: 'asc',
+	});
 
 	const fetchClients = async () => {
 		try {
@@ -95,15 +106,74 @@ const UnknownClientList = ({
 		fetchClients();
 	};
 
-	const filteredClients = clients.filter((client) => {
-		const searchLower = searchTerm.toLowerCase();
-		return (
-			client.name.toLowerCase().includes(searchLower) ||
-			client.invoice_no.toLowerCase().includes(searchLower) ||
-			client.client_code.toString().includes(searchLower) ||
-			client.amount?.toString().includes(searchLower)
-		);
-	});
+	const handleSortOnClick = (key: keyof CSVMapping) => {
+		if (sortConfig?.key === key) {
+			setSortConfig({
+				...sortConfig,
+				sort: sortConfig.sort === 'asc' ? 'desc' : 'asc',
+			});
+		} else {
+			setSortConfig({
+				key,
+				sort: 'asc',
+			});
+		}
+	};
+
+	const applySorting = (a: UnknownClient, b: UnknownClient) => {
+		if (!sortConfig) return 0;
+		const { key, sort } = sortConfig;
+
+		if (key === 'name') {
+			return stringCompare(a.name, b.name, sort);
+		}
+		if (key === 'invoice_no') {
+			return stringCompare(a.invoice_no, b.invoice_no, sort);
+		}
+		if (key === 'client_code') {
+			return stringCompare(a.client_code, b.client_code, sort);
+		}
+		if (key === 'amount') {
+			return numberCompare(
+				parseFloat(a.amount ?? '0'),
+				parseFloat(b.amount ?? '0'),
+				sort
+			);
+		}
+		if (key === 'paid_amount') {
+			return numberCompare(
+				parseFloat(a.paid_amount ?? '0'),
+				parseFloat(b.paid_amount ?? '0'),
+				sort
+			);
+		}
+		if (key === 'status') {
+			return stringCompare(a.status ?? '', b.status ?? '', sort);
+		}
+		if (key === 'date') {
+			return dateCompare(a.date ?? '', b.date ?? '', sort);
+		}
+		if (key === 'document_date') {
+			return dateCompare(a.document_date ?? '', b.document_date ?? '', sort);
+		}
+		if (key === 'due_date') {
+			return dateCompare(a.due_date ?? '', b.due_date ?? '', sort);
+		}
+
+		return 0;
+	};
+
+	const filteredClients = clients
+		.filter((client) => {
+			const searchLower = searchTerm.toLowerCase();
+			return (
+				client.name.toLowerCase().includes(searchLower) ||
+				client.invoice_no.toLowerCase().includes(searchLower) ||
+				client.client_code.toString().includes(searchLower) ||
+				client.amount?.toString().includes(searchLower)
+			);
+		})
+		.sort(applySorting);
 
 	if (isLoading) {
 		return (
@@ -134,34 +204,106 @@ const UnknownClientList = ({
 									Actions
 								</th>
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									nom
+									<SortableColHead
+										colKey='name'
+										label='Nom'
+										onClick={(col: string) =>
+											handleSortOnClick(col as keyof CSVMapping)
+										}
+										selectedColKey={sortConfig?.key ?? ''}
+										sort={sortConfig?.sort ?? 'none'}
+									/>
 								</th>
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									numéro de facture
+									<SortableColHead
+										colKey='invoice_no'
+										label='Numéro de facture'
+										onClick={(col: string) =>
+											handleSortOnClick(col as keyof CSVMapping)
+										}
+										selectedColKey={sortConfig?.key ?? ''}
+										sort={sortConfig?.sort ?? 'none'}
+									/>
 								</th>
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									code client
+									<SortableColHead
+										colKey='client_code'
+										label='code client'
+										onClick={(col: string) =>
+											handleSortOnClick(col as keyof CSVMapping)
+										}
+										selectedColKey={sortConfig?.key ?? ''}
+										sort={sortConfig?.sort ?? 'none'}
+									/>
 								</th>
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									Montant
+									<SortableColHead
+										colKey='amount'
+										label='Montant'
+										onClick={(col: string) =>
+											handleSortOnClick(col as keyof CSVMapping)
+										}
+										selectedColKey={sortConfig?.key ?? ''}
+										sort={sortConfig?.sort ?? 'none'}
+									/>
 								</th>
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									Montant payé
+									<SortableColHead
+										colKey='paid_amount'
+										label='Montant payé'
+										onClick={(col: string) =>
+											handleSortOnClick(col as keyof CSVMapping)
+										}
+										selectedColKey={sortConfig?.key ?? ''}
+										sort={sortConfig?.sort ?? 'none'}
+									/>
 								</th>
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									Date pièce
+									<SortableColHead
+										colKey='document_date'
+										label='Date pièce'
+										onClick={(col: string) =>
+											handleSortOnClick(col as keyof CSVMapping)
+										}
+										selectedColKey={sortConfig?.key ?? ''}
+										sort={sortConfig?.sort ?? 'none'}
+									/>
 								</th>
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									Date d'échéance
+									<SortableColHead
+										colKey='due_date'
+										label="Date d'échéance"
+										onClick={(col: string) =>
+											handleSortOnClick(col as keyof CSVMapping)
+										}
+										selectedColKey={sortConfig?.key ?? ''}
+										sort={sortConfig?.sort ?? 'none'}
+									/>
 								</th>
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									status
+									<SortableColHead
+										colKey='status'
+										label='status'
+										onClick={(col: string) =>
+											handleSortOnClick(col as keyof CSVMapping)
+										}
+										selectedColKey={sortConfig?.key ?? ''}
+										sort={sortConfig?.sort ?? 'none'}
+									/>
 								</th>
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 									Commentaire
 								</th>
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									Date
+									<SortableColHead
+										colKey='date'
+										label='Date'
+										onClick={(col: string) =>
+											handleSortOnClick(col as keyof CSVMapping)
+										}
+										selectedColKey={sortConfig?.key ?? ''}
+										sort={sortConfig?.sort ?? 'none'}
+									/>
 								</th>
 							</tr>
 						</thead>
@@ -196,7 +338,7 @@ const UnknownClientList = ({
 										{client.invoice_no}
 									</td>
 									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
-										{client.name}
+										{client.client_code}
 									</td>
 									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
 										{client.amount}

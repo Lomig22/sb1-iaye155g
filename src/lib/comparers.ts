@@ -31,6 +31,7 @@ export const dateCompare = (
 	b: string,
 	operation: 'asc' | 'desc' | 'none'
 ) => {
+	if (a === '' || b === '') return 0;
 	if (operation === 'none') return 0;
 	const dateA = new Date(a).getTime();
 	const dateB = new Date(b).getTime();

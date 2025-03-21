@@ -11,7 +11,7 @@ type CSVImportProps = {
 	unknownClientData: UnknownClient[];
 };
 
-interface CSVMapping {
+export interface CSVMapping {
 	name: string;
 	client_code: string;
 	invoice_no: string;

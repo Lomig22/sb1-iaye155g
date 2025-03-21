@@ -24,7 +24,6 @@ type ClientListProps = {
 type SortColumnConfig = {
 	key: keyof CSVMapping;
 	sort: 'none' | 'asc' | 'desc';
-	type: 'string' | 'number' | 'date';
 };
 
 function ClientList({
@@ -49,7 +48,6 @@ function ClientList({
 	const [sortConfig, setSortConfig] = useState<SortColumnConfig | null>({
 		key: 'company_name',
 		sort: 'asc',
-		type: 'string',
 	});
 
 	const fetchClients = async () => {
@@ -150,20 +148,6 @@ function ClientList({
 		return splitMail.length > 1 ? `${splitMail[0]}...` : splitMail[0];
 	};
 
-	const getColType = (key: keyof CSVMapping) => {
-		if (
-			key === 'company_name' ||
-			key === 'email' ||
-			key === 'client_code' ||
-			key === 'needs_reminder'
-		) {
-			return 'string';
-		}
-		if (key === 'created_at' || key === 'updated_at') {
-			return 'date';
-		}
-	};
-
 	const handleSortOnClick = (key: keyof CSVMapping) => {
 		if (sortConfig?.key === key) {
 			setSortConfig({
@@ -174,7 +158,6 @@ function ClientList({
 			setSortConfig({
 				key,
 				sort: 'asc',
-				type: getColType(key) ?? 'string',
 			});
 		}
 	};
