@@ -30,6 +30,7 @@ import ReminderHistory from './ReminderHistory';
 import { Link } from 'react-router-dom';
 import { dateCompare, numberCompare, stringCompare } from '../../lib/comparers';
 import SortableColHead from '../Common/SortableColHead';
+import { dateDiff } from '../../lib/dateDiff';
 
 type SortColumnConfig = {
 	key: keyof CSVMapping | 'client' | 'email';
@@ -503,6 +504,9 @@ function ReceivablesList() {
 									/>
 								</th>
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+									Délai en jours
+								</th>
+								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 									<SortableColHead
 										colKey='installment_number'
 										label='Numéro échéance'
@@ -641,6 +645,9 @@ function ReceivablesList() {
 									</td>
 									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
 										{new Date(receivable.due_date).toLocaleDateString('fr-FR')}
+									</td>
+									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+										{dateDiff(new Date(receivable.due_date), new Date())}
 									</td>
 									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
 										{receivable.installment_number || '-'}
