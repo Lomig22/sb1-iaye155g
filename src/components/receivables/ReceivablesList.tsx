@@ -226,7 +226,6 @@ function ReceivablesList() {
 		{
 			try {
 				setError(null);
-				console.log(selectedReceivable);
 				if (selectedReceivable == null) return;
 				setSending(true);
 				const success = await sendManualReminder(selectedReceivable.id);

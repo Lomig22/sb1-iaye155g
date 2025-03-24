@@ -148,7 +148,8 @@ export async function sendManualReminder(
 			emailSettings,
 			receivable.client.email,
 			`Relance facture ${receivable.invoice_number}`,
-			emailContent
+			emailContent,
+			receivable.invoice_pdf_url
 		);
 
 		if (emailSent) {
