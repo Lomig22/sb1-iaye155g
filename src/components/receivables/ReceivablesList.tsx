@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import {
 	Receivable,
@@ -67,6 +67,8 @@ function ReceivablesList() {
 		key: 'client',
 		sort: 'asc',
 	});
+	const [showConfirmSendReminder, setShowConfirmReminder] = useState(false);
+	const [sending, setSending] = useState(false);
 
 	const fetchReceivables = async () => {
 		try {
@@ -218,25 +220,34 @@ function ReceivablesList() {
 		}
 	};
 
-	const handleSendReminder = async (
-		receivable: Receivable & { client: Client }
-	) => {
-		try {
-			setError(null);
-			const success = await sendManualReminder(receivable.id);
+	const handleSendReminder = async () =>
+		// receivable: Receivable & { client: Client }
+		{
+			try {
+				setError(null);
+				console.log(selectedReceivable);
+				if (selectedReceivable == null) return;
+				setSending(true);
+				const success = await sendManualReminder(selectedReceivable.id);
 
-			if (success) {
-				await fetchReceivables();
-			} else {
-				setError(
-					"Impossible d'envoyer la relance. Vérifiez les paramètres email et les templates."
-				);
+				if (success) {
+					await fetchReceivables();
+				} else {
+					setError(
+						"Impossible d'envoyer la relance. Vérifiez les paramètres email et les templates."
+					);
+				}
+				setSending(false);
+				setShowConfirmReminder(false);
+				setSelectedClient(null);
+			} catch (error: any) {
+				console.error('Error sending reminder:', error);
+				setError(error.message || "Erreur lors de l'envoi de la relance");
+				setSending(false);
+				setShowConfirmReminder(false);
+				setSelectedClient(null);
 			}
-		} catch (error: any) {
-			console.error('Error sending reminder:', error);
-			setError(error.message || "Erreur lors de l'envoi de la relance");
-		}
-	};
+		};
 
 	const handleImportSuccess = (importedCount: number) => {
 		setImportSuccess(`${importedCount} créance(s) importée(s) avec succès`);
@@ -539,7 +550,10 @@ function ReceivablesList() {
 											{receivable.status !== 'paid' && (
 												<>
 													<button
-														onClick={() => handleSendReminder(receivable)}
+														onClick={() => {
+															setSelectedReceivable(receivable);
+															setShowConfirmReminder(true);
+														}}
 														className='text-yellow-600 hover:text-yellow-800'
 														title='Envoyer une relance'
 													>
@@ -631,7 +645,7 @@ function ReceivablesList() {
 									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
 										{receivable.installment_number || '-'}
 									</td>
-									<td className='px-6 py-4 whitespace-nowrap'>
+									<td className='px-6 py-4 whitespace-nowrap flex gap-1 items-center'>
 										<span
 											className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
 												receivable.status === 'paid'
@@ -660,6 +674,14 @@ function ReceivablesList() {
 											{receivable.status === 'Relance finale' &&
 												'Relance finale'}
 										</span>
+										{!receivable.automatic_reminder && (
+											<span
+												title='Automati Reminders disabled'
+												className='text-yellow-500 cursor-help'
+											>
+												<Info className='h-4 w-4' />
+											</span>
+										)}
 									</td>
 									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
 										{receivable.notes || '-'}
@@ -749,6 +771,48 @@ function ReceivablesList() {
 					onImportSuccess={handleImportSuccess}
 					receivables={receivables}
 				/>
+			)}
+			{showConfirmSendReminder && selectedReceivable && (
+				<div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
+					<div className='bg-white rounded-lg p-6 max-w-md w-full mx-4'>
+						<div className='flex justify-between items-center mb-4'>
+							<h3 className='text-lg font-medium text-gray-900'>Es-tu sûr</h3>
+							<button
+								onClick={() => {
+									setShowConfirmReminder(false);
+									setSelectedReceivable(null);
+								}}
+								className='text-gray-400 hover:text-gray-500'
+							>
+								<X className='h-5 w-5' />
+							</button>
+						</div>
+
+						<p className='text-sm text-gray-500 mb-4'>
+							êtes-vous sûr de vouloir envoyer un relance manuel,
+						</p>
+
+						<div className='flex justify-end space-x-4'>
+							<button
+								onClick={() => {
+									setShowConfirmReminder(false);
+									setSelectedReceivable(null);
+								}}
+								className='px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-md'
+								disabled={sending}
+							>
+								Annuler
+							</button>
+							<button
+								onClick={handleSendReminder}
+								disabled={sending}
+								className='px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50'
+							>
+								{sending ? 'Envoi...' : 'Envoyer un raleance'}
+							</button>
+						</div>
+					</div>
+				</div>
 			)}
 
 			{showDeleteConfirm && receivableToDelete && (
