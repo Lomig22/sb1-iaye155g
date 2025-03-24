@@ -45,9 +45,7 @@ const ReminderHistory = ({
 								{filteredReminders.map((record) => (
 									<tr key={record.id} className='hover:bg-gray-50'>
 										<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
-											{new Date(record.reminder_date).toLocaleDateString(
-												'fr-FR'
-											)}
+											{new Date(record.reminder_date).toLocaleString('fr-FR')}
 										</td>
 										<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
 											{record.reminder_type}

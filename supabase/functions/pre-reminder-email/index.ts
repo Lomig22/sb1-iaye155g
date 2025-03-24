@@ -172,6 +172,14 @@ const sendDueEmails = async (
 			subject: `Email de pré relance - ${receivable.invoice_number}`, // Subject line
 			text: content, // plain text body
 			html: emailContent, // html body
+			attachments: receivable.invoice_pdf_url
+				? [
+						{
+							filename: 'logo.png',
+							path: receivable.invoice_pdf_url,
+						},
+				  ]
+				: undefined,
 		});
 
 		await updateReminderTable(
@@ -237,6 +245,14 @@ const sendFirstReminders = async (
 			subject: `Relance facture ${receivable.invoice_number}`, // Subject line
 			text: content, // plain text body
 			html: emailContent, // html body
+			attachments: receivable.invoice_pdf_url
+				? [
+						{
+							filename: 'logo.png',
+							path: receivable.invoice_pdf_url,
+						},
+				  ]
+				: undefined,
 		});
 
 		await updateReminderTable(
@@ -303,6 +319,14 @@ const secondReminders = async (
 			subject: `Relance facture ${receivable.invoice_number}`, // Subject line
 			text: content, // plain text body
 			html: emailContent, // html body
+			attachments: receivable.invoice_pdf_url
+				? [
+						{
+							filename: 'logo.png',
+							path: receivable.invoice_pdf_url,
+						},
+				  ]
+				: undefined,
 		});
 
 		await updateReminderTable(
@@ -369,6 +393,14 @@ const thirdReminders = async (
 			subject: `Relance facture ${receivable.invoice_number}`, // Subject line
 			text: content, // plain text body
 			html: emailContent, // html body
+			attachments: receivable.invoice_pdf_url
+				? [
+						{
+							filename: 'logo.png',
+							path: receivable.invoice_pdf_url,
+						},
+				  ]
+				: undefined,
 		});
 
 		await updateReminderTable(
@@ -436,6 +468,14 @@ const finalReminders = async (
 			subject: `Relance facture ${receivable.invoice_number}`, // Subject line
 			text: content, // plain text body
 			html: emailContent, // html body
+			attachments: receivable.invoice_pdf_url
+				? [
+						{
+							filename: 'logo.png',
+							path: receivable.invoice_pdf_url,
+						},
+				  ]
+				: undefined,
 		});
 
 		await updateReminderTable(

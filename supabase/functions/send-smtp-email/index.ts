@@ -17,6 +17,7 @@ interface EmailRequest {
 	to: string;
 	subject: string;
 	html: string;
+	invoice_pdf_url: string;
 }
 
 serve(async (req) => {
@@ -34,7 +35,8 @@ serve(async (req) => {
 		}
 
 		const data = await req.json();
-		const { settings, to, subject, html } = data.list[0] as EmailRequest;
+		const { settings, to, subject, html, invoice_pdf_url } = data
+			.list[0] as EmailRequest;
 
 		const host = Deno.env.get('EMAIL_HOST');
 		const port = Deno.env.get('EMAIL_PORT');
@@ -68,6 +70,14 @@ serve(async (req) => {
 			subject: subject, // Subject line
 			text: html, // plain text body
 			html: html, // html body
+			attachments: invoice_pdf_url
+				? [
+						{
+							filename: 'invoice.pdf',
+							path: invoice_pdf_url,
+						},
+				  ]
+				: undefined,
 		});
 
 		// await client.send({

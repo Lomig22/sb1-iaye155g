@@ -148,7 +148,8 @@ export async function sendManualReminder(
 			emailSettings,
 			receivable.client.email,
 			`Relance facture ${receivable.invoice_number}`,
-			emailContent
+			emailContent,
+			receivable.invoice_pdf_url
 		);
 
 		if (emailSent) {
@@ -165,7 +166,14 @@ export async function sendManualReminder(
 			await supabase
 				.from('receivables')
 				.update({
-					status: 'reminded',
+					status:
+						level === 'first'
+							? 'Relance 1'
+							: level === 'second'
+							? 'Relance 2'
+							: level === 'third'
+							? 'Relance 3'
+							: 'Relance 4',
 					updated_at: new Date().toISOString(),
 				})
 				.eq('id', receivableId);

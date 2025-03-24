@@ -12,7 +12,8 @@ export const sendEmail = async (
 	settings: EmailSettings,
 	to: string,
 	subject: string,
-	htmlContent: string
+	htmlContent: string,
+	invoice_pdf_url?: string
 ): Promise<boolean> => {
 	try {
 		const auth_data = localStorage.getItem('paymentflow-auth');
@@ -55,6 +56,7 @@ export const sendEmail = async (
 			        </body>
 			      </html>
 			    `,
+								invoice_pdf_url: invoice_pdf_url,
 							},
 						],
 					}),
