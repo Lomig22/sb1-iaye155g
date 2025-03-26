@@ -731,7 +731,9 @@ export default function CSVImportModal({
 				.eq('owner_id', user.id);
 
 			const reminderProfileExist =
-				reminderPorfile !== null && reminderPorfile[0] !== null;
+				reminderPorfile !== null &&
+				reminderPorfile[0] !== null &&
+				reminderPorfile.length > 0;
 
 			for (const [tempId, newClient] of Object.entries(newClients)) {
 				try {
