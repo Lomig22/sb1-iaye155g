@@ -114,7 +114,7 @@ const updateReminderTable = async (
 			reminder_status: action.toLowerCase(),
 			status:
 				action === 'pre'
-					? 'reminded'
+					? 'Relance préventive'
 					: action === 'first'
 					? 'Relance 1'
 					: action === 'second'
@@ -481,7 +481,7 @@ const finalReminders = async (
 		await updateReminderTable(
 			supabaseClient,
 			receivable.id,
-			'third',
+			'final',
 			emailContent
 		);
 	}

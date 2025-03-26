@@ -47,7 +47,8 @@ export interface Receivable {
 		| 'Relance 1'
 		| 'Relance 2'
 		| 'Relance 3'
-		| 'Relance finale';
+		| 'Relance finale'
+		| 'Relance préventive';
 	invoice_pdf_url?: string;
 	installment_number?: string; // Numéro échéance
 	owner_id: string;

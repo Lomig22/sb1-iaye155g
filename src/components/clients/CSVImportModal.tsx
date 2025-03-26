@@ -561,7 +561,9 @@ export default function CSVImportModal({
 			if (clientsToInsert.length > 0) {
 				const { data, error } = await supabase
 					.from('clients')
-					.insert(clientsToInsert)
+					.upsert(clientsToInsert, {
+						onConflict: 'owner_id, client_code',
+					})
 					.select();
 
 				if (error) {

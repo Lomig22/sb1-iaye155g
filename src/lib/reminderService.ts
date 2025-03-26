@@ -46,6 +46,7 @@ function formatTemplate(
 		invoice_number: string;
 		due_date: string;
 		days_late: number;
+		days_left?: number;
 	}
 ): string {
 	return template
@@ -62,18 +63,35 @@ function formatTemplate(
 			/{due_date}/g,
 			new Date(variables.due_date).toLocaleDateString('fr-FR')
 		)
-		.replace(/{days_late}/g, variables.days_late.toString());
+		.replace(/{days_late}/g, variables.days_late.toString())
+		.replace(/{days_left}/g, variables.days_left?.toString() || '');
 }
 
 // Fonction pour déterminer le niveau de relance approprié
 function determineReminderLevel(
 	daysLate: number,
-	client: Client
+	client: Client,
+	status: string
 ): {
-	level: 'first' | 'second' | 'third' | 'final' | null;
+	level: 'pre' | 'first' | 'second' | 'third' | 'final' | null;
 	template: string | null;
 } {
 	if (!client) return { level: null, template: null };
+
+	// if(status === 'Relance finale' || status === 'Relance 3' || status === 'Relance 2' || status === 'Relance 1' || status === 'Relance préventive') return { level: null, template: null };
+	// }
+
+	if (status === 'Relance finale') return { level: null, template: null };
+	if (status === 'Relance 3' && client.reminder_template_final)
+		return { level: 'final', template: client.reminder_template_final };
+	if (status === 'Relance 2' && client.reminder_template_3)
+		return { level: 'third', template: client.reminder_template_3 };
+	if (status === 'Relance 1' && client.reminder_template_2)
+		return { level: 'second', template: client.reminder_template_2 };
+	if (status === 'Relance préventive' && client.reminder_template_1)
+		return { level: 'first', template: client.reminder_template_1 };
+	if (client.pre_reminder_template)
+		return { level: 'pre', template: client.pre_reminder_template };
 
 	if (
 		daysLate >= (client.reminder_delay_final || 60) &&
@@ -99,7 +117,7 @@ function determineReminderLevel(
 	) {
 		return { level: 'first', template: client.reminder_template_1 };
 	}
-	return { level: 'first', template: client.reminder_template_1 || null };
+	return { level: 'pre', template: client.pre_reminder_template || null };
 }
 
 // Fonction pour envoyer une relance manuelle
@@ -132,7 +150,8 @@ export async function sendManualReminder(
 
 		const { level, template } = determineReminderLevel(
 			daysLate,
-			receivable.client
+			receivable.client,
+			receivable.status
 		);
 		if (!level || !template) return false;
 
@@ -142,6 +161,7 @@ export async function sendManualReminder(
 			invoice_number: receivable.invoice_number,
 			due_date: receivable.due_date,
 			days_late: daysLate,
+			days_left: Math.max(0, -1 * daysLate),
 		});
 
 		const emailSent = await sendEmail(
@@ -173,7 +193,11 @@ export async function sendManualReminder(
 							? 'Relance 2'
 							: level === 'third'
 							? 'Relance 3'
-							: 'Relance 4',
+							: level === 'final'
+							? 'Relance finale'
+							: level === 'pre'
+							? 'Relance préventive'
+							: 'Relance',
 					updated_at: new Date().toISOString(),
 				})
 				.eq('id', receivableId);
@@ -222,7 +246,8 @@ export async function checkAndSendReminders(userId: string): Promise<void> {
 
 			const { level, template } = determineReminderLevel(
 				daysLate,
-				receivable.client
+				receivable.client,
+				receivable.status
 			);
 			if (!level || !template) continue;
 

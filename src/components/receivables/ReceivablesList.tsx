@@ -20,6 +20,7 @@ import {
 	Info,
 	ListRestart,
 	File,
+	Pause,
 } from 'lucide-react';
 import ReceivableForm from './ReceivableForm';
 import ReceivableEditForm from './ReceivableEditForm';
@@ -662,7 +663,8 @@ function ReceivablesList() {
 													  receivable.status === 'Relance 1' ||
 													  receivable.status === 'Relance 2' ||
 													  receivable.status === 'Relance 3' ||
-													  receivable.status === 'Relance finale'
+													  receivable.status === 'Relance finale' ||
+													  receivable.status === 'Relance préventive'
 													? 'bg-yellow-100 text-yellow-800'
 													: receivable.status === 'legal'
 													? 'bg-purple-100 text-purple-800'
@@ -679,13 +681,15 @@ function ReceivablesList() {
 											{receivable.status === 'Relance 3' && 'Relance 3'}
 											{receivable.status === 'Relance finale' &&
 												'Relance finale'}
+											{receivable.status === 'Relance préventive' &&
+												'Relance préventive'}
 										</span>
 										{!receivable.automatic_reminder && (
 											<span
 												title='Automati Reminders disabled'
 												className='text-yellow-500 cursor-help'
 											>
-												<Info className='h-4 w-4' />
+												<Pause className='h-4 w-4' />
 											</span>
 										)}
 									</td>
