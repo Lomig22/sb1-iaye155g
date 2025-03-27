@@ -264,10 +264,11 @@ export default function ReceivableEditForm({
 
 						<div>
 							<label className='block text-sm font-medium text-gray-700 mb-2'>
-								Montant Réglé devise (€)
+								Montant Réglé devise (€) *
 							</label>
 							<input
 								type='number'
+								required
 								step='0.01'
 								min='0'
 								value={formData.paid_amount}

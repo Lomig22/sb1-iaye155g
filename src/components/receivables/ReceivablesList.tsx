@@ -34,7 +34,7 @@ import SortableColHead from '../Common/SortableColHead';
 import { dateDiff } from '../../lib/dateDiff';
 
 type SortColumnConfig = {
-	key: keyof CSVMapping | 'client' | 'email';
+	key: keyof CSVMapping | 'client' | 'email' | 'delay in days';
 	sort: 'none' | 'asc' | 'desc';
 };
 
@@ -274,7 +274,7 @@ function ReceivablesList() {
 		setShowReminderHistory(false);
 	};
 
-	const handleSortOnClick = (key: keyof CSVMapping) => {
+	const handleSortOnClick = (key: keyof CSVMapping | 'Delay in Days') => {
 		if (sortConfig?.key === key) {
 			setSortConfig({
 				...sortConfig,
@@ -294,7 +294,6 @@ function ReceivablesList() {
 	) => {
 		if (!sortConfig) return 0;
 		const { key, sort } = sortConfig;
-
 		if (key === 'client') {
 			return stringCompare(a.client.company_name, b.client.company_name, sort);
 		}
@@ -329,6 +328,13 @@ function ReceivablesList() {
 				sort
 			);
 		}
+		if (key === 'Delay in Days') {
+			return numberCompare(
+				dateDiff(new Date(a.due_date), new Date()),
+				dateDiff(new Date(b.due_date), new Date()),
+				sort
+			);
+		}
 
 		return 0;
 	};
@@ -343,6 +349,7 @@ function ReceivablesList() {
 			);
 		})
 		.sort(applySorting);
+
 	if (loading) {
 		return (
 			<div className='flex items-center justify-center h-96'>
@@ -504,7 +511,15 @@ function ReceivablesList() {
 									/>
 								</th>
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									Délai en jours
+									<SortableColHead
+										colKey='Delay in Days'
+										label='Délai en jours'
+										onClick={(col: string) =>
+											handleSortOnClick(col as keyof CSVMapping)
+										}
+										selectedColKey={sortConfig?.key ?? ''}
+										sort={sortConfig?.sort ?? 'none'}
+									/>
 								</th>
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 									<SortableColHead
@@ -786,7 +801,9 @@ function ReceivablesList() {
 				<div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
 					<div className='bg-white rounded-lg p-6 max-w-md w-full mx-4'>
 						<div className='flex justify-between items-center mb-4'>
-							<h3 className='text-lg font-medium text-gray-900'>Es-tu sûr</h3>
+							<h3 className='text-lg font-medium text-gray-900'>
+								Confirmation d’envo
+							</h3>
 							<button
 								onClick={() => {
 									setShowConfirmReminder(false);
@@ -799,7 +816,7 @@ function ReceivablesList() {
 						</div>
 
 						<p className='text-sm text-gray-500 mb-4'>
-							êtes-vous sûr de vouloir envoyer la relance manuel,
+							Êtes-vous sûr de vouloir envoyer la relance manuelle ?
 						</p>
 
 						<div className='flex justify-end space-x-4'>
