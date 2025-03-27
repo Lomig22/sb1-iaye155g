@@ -799,7 +799,7 @@ function ReceivablesList() {
 						</div>
 
 						<p className='text-sm text-gray-500 mb-4'>
-							êtes-vous sûr de vouloir envoyer un relance manuel,
+							êtes-vous sûr de vouloir envoyer la relance manuel,
 						</p>
 
 						<div className='flex justify-end space-x-4'>
