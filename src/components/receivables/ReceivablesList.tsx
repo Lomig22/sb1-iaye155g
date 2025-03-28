@@ -835,7 +835,7 @@ function ReceivablesList() {
 								disabled={sending}
 								className='px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50'
 							>
-								{sending ? 'Envoi...' : 'Envoyer la relance"'}
+								{sending ? 'Envoi...' : 'Envoyer la relance'}
 							</button>
 						</div>
 					</div>
