@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
-import { supabase } from '../lib/supabase';
-import { Mail, ArrowLeft } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import { supabase } from "../lib/supabase";
+import { Mail, ArrowLeft } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [message, setMessage] = useState<{
-    type: 'success' | 'error';
+    type: "success" | "error";
     text: string;
   } | null>(null);
   const [lastResetAttempt, setLastResetAttempt] = useState(0);
@@ -19,8 +19,8 @@ export default function ForgotPasswordPage() {
     setMessage(null);
 
     // Validate email
-    if (!email.includes('@') || !email.includes('.')) {
-      setMessage({ type: 'error', text: 'Veuillez saisir un email valide.' });
+    if (!email.includes("@") || !email.includes(".")) {
+      setMessage({ type: "error", text: "Veuillez saisir un email valide." });
       setLoading(false);
       return;
     }
@@ -30,7 +30,7 @@ export default function ForgotPasswordPage() {
     const timeSinceLastAttempt = now - lastResetAttempt;
     if (timeSinceLastAttempt < 15000) {
       setMessage({
-        type: 'error',
+        type: "error",
         text: `Veuillez attendre ${Math.ceil(
           (15000 - timeSinceLastAttempt) / 1000
         )} secondes avant de réessayer.`,
@@ -45,9 +45,9 @@ export default function ForgotPasswordPage() {
       });
 
       if (error) {
-        if (error.message.includes('rate_limit')) {
+        if (error.message.includes("rate_limit")) {
           throw new Error(
-            'Pour des raisons de sécurité, veuillez attendre quelques secondes avant de réessayer.'
+            "Pour des raisons de sécurité, veuillez attendre quelques secondes avant de réessayer."
           );
         }
         throw error;
@@ -55,13 +55,14 @@ export default function ForgotPasswordPage() {
 
       setLastResetAttempt(now);
       setMessage({
-        type: 'success',
-        text: 'Un email de réinitialisation vous a été envoyé. Veuillez vérifier votre boîte de réception.',
+        type: "success",
+        text: "Un email de réinitialisation vous a été envoyé. Veuillez vérifier votre boîte de réception.",
       });
     } catch (error: any) {
       setMessage({
-        type: 'error',
-        text: error.message || 'Une erreur est survenue lors de l\'envoi de l\'email',
+        type: "error",
+        text:
+          error.message || "Une erreur est survenue lors de l'envoi de l'email",
       });
     } finally {
       setLoading(false);
@@ -71,13 +72,6 @@ export default function ForgotPasswordPage() {
   return (
     <div className="min-h-screen bg-gray-100/80 backdrop-blur-sm flex items-center justify-center p-4 fixed inset-0 z-50">
       <div className="max-w-md w-full bg-white rounded-lg shadow-xl p-8 relative">
-        <button
-          onClick={() => navigate(-1)}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-        >
-          <ArrowLeft className="h-6 w-6" />
-        </button>
-
         <h2 className="text-2xl font-bold text-center mb-8">
           Réinitialisation du mot de passe
         </h2>
@@ -85,9 +79,9 @@ export default function ForgotPasswordPage() {
         {message && (
           <div
             className={`p-4 rounded-md mb-6 ${
-              message.type === 'success'
-                ? 'bg-green-50 text-green-700'
-                : 'bg-red-50 text-red-700'
+              message.type === "success"
+                ? "bg-green-50 text-green-700"
+                : "bg-red-50 text-red-700"
             }`}
           >
             {message.text}
@@ -117,7 +111,7 @@ export default function ForgotPasswordPage() {
             disabled={loading}
             className="w-full bg-blue-600 text-white p-3 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50"
           >
-            {loading ? 'Envoi en cours...' : 'Envoyer les instructions'}
+            {loading ? "Envoi en cours..." : "Envoyer les instructions"}
           </button>
 
           <div className="text-center space-y-2">
@@ -134,7 +128,7 @@ export default function ForgotPasswordPage() {
         </form>
 
         <button
-          onClick={() => navigate('/landing')}
+          onClick={() => navigate("/landing")}
           className="mt-6 w-full flex items-center justify-center text-gray-600 hover:text-gray-800 transition-colors"
         >
           <ArrowLeft className="h-5 w-5 mr-2" />
