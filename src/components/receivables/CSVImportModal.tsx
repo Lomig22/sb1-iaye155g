@@ -78,11 +78,13 @@ const columnMapping: { [key: string]: string } = {
 	// Code
 	code: 'code',
 	'code facture': 'code',
-	'code client': 'code',
 	'code référence': 'code',
 	'code reference': 'code',
 	'invoice code': 'code',
 	'ref code': 'code',
+
+	// Client Code
+	'code client': 'client_code',
 
 	// Montant
 	montant: 'amount',
@@ -379,7 +381,7 @@ export default function CSVImportModal({
 
 	const getClientId = (clientIdentifier: string): string | null => {
 		if (!clientIdentifier) return null;
-
+		console.log('Client Key:', clientIdentifier);
 		// Si c'est déjà un UUID valide
 		if (
 			/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
@@ -401,7 +403,7 @@ export default function CSVImportModal({
 		// Chercher par correspondance exacte
 		// Shanaka (Start)
 		const exactMatch = clients.find(
-			(c) => c.company_name.toLowerCase().trim() === clientKey
+			(c) => c.client_code.toLowerCase().trim() === clientKey
 		);
 		// Shanaka (Finish)
 
@@ -413,16 +415,7 @@ export default function CSVImportModal({
 		// Removed partial match as we need the exact match to get the correct client id to see if the client is new
 		// Chercher par correspondance partielle
 		const partialMatches = clients.filter((c) => {
-			if (c.company_name === '') {
-				return clientKey === '';
-			}
-			if (clientKey === '') {
-				return c.company_name === '';
-			}
-			return (
-				c.company_name.toLowerCase().includes(clientKey) ||
-				clientKey.includes(c.company_name.toLowerCase())
-			);
+			return clientKey.includes(c.client_code.toLowerCase());
 		});
 		if (partialMatches.length === 1) {
 			return partialMatches[0].id;
@@ -432,7 +425,7 @@ export default function CSVImportModal({
 		if (partialMatches.length > 1) {
 			// Trier par longueur de nom d'entreprise (du plus court au plus long)
 			partialMatches.sort(
-				(a, b) => a.company_name.length - b.company_name.length
+				(a, b) => a.client_code.length - b.client_code.length
 			);
 			return partialMatches[0].id;
 		}
@@ -443,12 +436,12 @@ export default function CSVImportModal({
 		if (cleanClientKey !== clientKey) {
 			const cleanMatches = clients.filter(
 				(c) =>
-					c.company_name
+					c.client_code
 						.toLowerCase()
 						.replace(/[&@]/g, '')
 						.includes(cleanClientKey) ||
 					cleanClientKey.includes(
-						c.company_name.toLowerCase().replace(/[&@]/g, '')
+						c.client_code.toLowerCase().replace(/[&@]/g, '')
 					)
 			);
 			if (cleanMatches.length === 1) {
@@ -457,7 +450,7 @@ export default function CSVImportModal({
 
 			if (cleanMatches.length > 1) {
 				cleanMatches.sort(
-					(a, b) => a.company_name.length - b.company_name.length
+					(a, b) => a.client_code.length - b.client_code.length
 				);
 				return cleanMatches[0].id;
 			}
@@ -478,14 +471,14 @@ export default function CSVImportModal({
 				return normalizedKey === '';
 			}
 			if (normalizedKey === '') {
-				return c.company_name === '';
+				return c.client_code === '';
 			}
 			return (
-				c.company_name
+				c.client_code
 					.toLowerCase()
 					.replace(/\s+/g, '')
 					.includes(normalizedKey) ||
-				normalizedKey.includes(c.company_name.toLowerCase().replace(/\s+/g, ''))
+				normalizedKey.includes(c.client_code.toLowerCase().replace(/\s+/g, ''))
 			);
 		});
 		if (normalizedMatches.length === 1) {
@@ -494,7 +487,7 @@ export default function CSVImportModal({
 
 		if (normalizedMatches.length > 1) {
 			normalizedMatches.sort(
-				(a, b) => a.company_name.length - b.company_name.length
+				(a, b) => a.client_code.length - b.client_code.length
 			);
 			return normalizedMatches[0].id;
 		}
@@ -616,8 +609,9 @@ export default function CSVImportModal({
 					const dueDate =
 						formatDate(dueDateStr) || new Date().toISOString().split('T')[0];
 					const status = mapStatus(statusStr);
+					const clientCode = row[clientCodeIndex] || '';
 					// Trouver le client correspondant
-					const clientId = getClientId(clientName);
+					const clientId = getClientId(clientCode);
 
 					//shanaka (Start)
 					// Check if the client is already in the new clients map
@@ -719,6 +713,9 @@ export default function CSVImportModal({
 				(h) => mapping[h] === 'installment_number'
 			);
 			const statusIndex = csvHeaders.findIndex((h) => mapping[h] === 'status');
+			const clientCodeIndex = csvHeaders.findIndex(
+				(h) => mapping[h] === 'client_code'
+			);
 			//Shanaka (Finish)
 			// Créer d'abord les nouveaux clients
 			const createdClients: Record<string, string> = {}; // Map des IDs temporaires vers les vrais IDs
@@ -818,6 +815,7 @@ export default function CSVImportModal({
 					const dueDate =
 						formatDate(dueDateStr) || new Date().toISOString().split('T')[0];
 					const status = mapStatus(statusStr);
+					const clientCode = row[clientCodeIndex] || '';
 
 					// Trouver le client correspondant
 					let clientId = getClientId(clientName);
@@ -842,17 +840,22 @@ export default function CSVImportModal({
 								// Créer un nouveau client
 								const { data: newClient, error } = await supabase
 									.from('clients')
-									.insert([
+									.upsert(
+										[
+											{
+												company_name: clientName,
+												client_code: clientCode,
+												email: `${clientName
+													.toLowerCase()
+													.replace(/\s+/g, '.')}@example.com`,
+												needs_reminder: true,
+												owner_id: user.id,
+											},
+										],
 										{
-											company_name: clientName,
-											client_code: clientCode,
-											email: `${clientName
-												.toLowerCase()
-												.replace(/\s+/g, '.')}@example.com`,
-											needs_reminder: true,
-											owner_id: user.id,
-										},
-									])
+											onConflict: 'owner_id, client_code',
+										}
+									)
 									.select()
 									.single();
 
