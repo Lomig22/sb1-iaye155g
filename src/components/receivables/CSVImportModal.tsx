@@ -40,7 +40,6 @@ const mappingFields: MappingField[] = [
 	{ field: 'document_date', label: 'Date pièce', required: false },
 	{ field: 'installment_number', label: "Numéro d'échéance", required: false },
 	{ field: 'client_code', label: 'Code Client', required: false },
-	{ field: 'code', label: 'Code', required: false },
 ];
 
 // Shanaka (Start)
