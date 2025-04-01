@@ -697,7 +697,7 @@ function ReceivablesList() {
 											{receivable.status === 'Relance finale' &&
 												'Relance finale'}
 											{receivable.status === 'Relance préventive' &&
-												'Rré-relance'}
+												'Pré-relance'}
 										</span>
 										{!receivable.automatic_reminder && (
 											<span
