@@ -39,7 +39,7 @@ const mappingFields: MappingField[] = [
 	{ field: 'status', label: 'Statut', required: false },
 	{ field: 'document_date', label: 'Date pièce', required: false },
 	{ field: 'installment_number', label: "Numéro d'échéance", required: false },
-	{ field: 'client_code', label: 'Numéro dans gestion', required: false },
+	{ field: 'client_code', label: 'Code Client', required: false },
 	{ field: 'code', label: 'Code', required: false },
 ];
 
@@ -75,6 +75,8 @@ const columnMapping: { [key: string]: string } = {
 	management_number: 'client_code',
 	'internal ref': 'client_code',
 	'internal reference': 'client_code',
+	'code client': 'client_code',
+
 	// Code
 	code: 'code',
 	'code facture': 'code',
@@ -82,9 +84,6 @@ const columnMapping: { [key: string]: string } = {
 	'code reference': 'code',
 	'invoice code': 'code',
 	'ref code': 'code',
-
-	// Client Code
-	'code client': 'client_code',
 
 	// Montant
 	montant: 'amount',
@@ -497,8 +496,8 @@ export default function CSVImportModal({
 
 	const mapStatus = (
 		statusStr: string
-	): 'pending' | 'reminded' | 'paid' | 'late' | 'legal' => {
-		if (!statusStr) return 'pending';
+	): 'pending' | 'reminded' | 'paid' | 'late' | 'legal' | undefined => {
+		if (!statusStr) return undefined;
 
 		const statusLower = statusStr.toLowerCase();
 
@@ -650,7 +649,7 @@ export default function CSVImportModal({
 							document_date: documentDate,
 							due_date: dueDate,
 							installment_number: installmentNumber,
-							status,
+							status: status !== null ? status : undefined,
 							created_at: new Date().toISOString(),
 							updated_at: new Date().toISOString(),
 							client: newClient,
@@ -892,7 +891,7 @@ export default function CSVImportModal({
 							document_date: documentDate,
 							due_date: dueDate,
 							installment_number: installmentNumber,
-							status,
+							//status: status !== null ? status : undefined,
 							owner_id: user.id,
 							created_at: new Date().toISOString(),
 							updated_at: new Date().toISOString(),
