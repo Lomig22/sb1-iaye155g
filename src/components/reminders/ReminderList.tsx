@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { Client, Receivable, Reminder } from '../../types/database';
 import { AlertCircle, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { decodeReminderStatus } from '../../lib/decodeReminderStatus';
 
 const ReminderList = () => {
 	const [isLoading, setIsLoading] = useState(true);
@@ -114,7 +115,7 @@ const ReminderList = () => {
 										{record.receivable?.invoice_number}
 									</td>
 									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
-										{record.reminder_type}
+										{decodeReminderStatus(record.reminder_type)}
 									</td>
 								</tr>
 							))}

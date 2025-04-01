@@ -34,7 +34,7 @@ import SortableColHead from '../Common/SortableColHead';
 import { dateDiff } from '../../lib/dateDiff';
 
 type SortColumnConfig = {
-	key: keyof CSVMapping | 'client' | 'email' | 'delay in days';
+	key: keyof CSVMapping | 'client' | 'email' | 'Delay in Days';
 	sort: 'none' | 'asc' | 'desc';
 };
 
@@ -697,7 +697,7 @@ function ReceivablesList() {
 											{receivable.status === 'Relance finale' &&
 												'Relance finale'}
 											{receivable.status === 'Relance préventive' &&
-												'Relance préventive'}
+												'Rré-relance'}
 										</span>
 										{!receivable.automatic_reminder && (
 											<span

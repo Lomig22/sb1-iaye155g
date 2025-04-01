@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Reminder } from '../../types/database';
 import { X } from 'lucide-react';
+import { decodeReminderStatus } from '../../lib/decodeReminderStatus';
 
 type ReminderHistoryProps = {
 	receivableId: string;
@@ -48,7 +49,7 @@ const ReminderHistory = ({
 											{new Date(record.reminder_date).toLocaleString('fr-FR')}
 										</td>
 										<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
-											{record.reminder_type}
+											{decodeReminderStatus(record.reminder_type)}
 										</td>
 									</tr>
 								))}

@@ -160,7 +160,7 @@ export async function sendManualReminder(
 			amount: receivable.amount,
 			invoice_number: receivable.invoice_number,
 			due_date: receivable.due_date,
-			days_late: daysLate,
+			days_late: daysLate || 0,
 			days_left: Math.max(0, -1 * daysLate),
 		});
 
