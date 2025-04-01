@@ -143,7 +143,7 @@ const sendDueEmails = async (
 		const diffTime = dueDate.getTime() - today.getTime();
 		const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 		return (
-			diffDays === clientMap.get(receivable.client_id)?.pre_reminder_days &&
+			diffDays <= clientMap.get(receivable.client_id)?.pre_reminder_days &&
 			receivable.reminder_status === 'none'
 		);
 	});
@@ -190,6 +190,7 @@ const sendDueEmails = async (
 		);
 	}
 	// Return details of records that emails were sent to
+	return dueReceivables.map((receivable) => receivable.id) || [];
 };
 
 const sendFirstReminders = async (
@@ -207,7 +208,7 @@ const sendFirstReminders = async (
 		const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 		return (
 			diffDays >= clientMap.get(receivable.client_id)?.reminder_delay_1 &&
-			diffDays < clientMap.get(receivable.client_id)?.reminder_delay_2 &&
+			//diffDays < clientMap.get(receivable.client_id)?.reminder_delay_2 &&
 			(receivable.reminder_status === 'none' ||
 				receivable.reminder_status === 'pre')
 		);
@@ -262,6 +263,8 @@ const sendFirstReminders = async (
 			emailContent
 		);
 	}
+
+	return dueReceivables.map((item) => item.id) || [];
 };
 
 const secondReminders = async (
@@ -280,7 +283,7 @@ const secondReminders = async (
 		const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 		return (
 			diffDays >= clientMap.get(receivable.client_id)?.reminder_delay_2 &&
-			diffDays < clientMap.get(receivable.client_id)?.reminder_delay_3 &&
+			//diffDays < clientMap.get(receivable.client_id)?.reminder_delay_3 &&
 			(receivable.reminder_status === 'none' ||
 				receivable.reminder_status === 'pre' ||
 				receivable.reminder_status === 'first')
@@ -336,6 +339,7 @@ const secondReminders = async (
 			emailContent
 		);
 	}
+	return dueReceivables.map((item) => item.id) || [];
 };
 
 const thirdReminders = async (
@@ -353,7 +357,7 @@ const thirdReminders = async (
 		const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 		return (
 			diffDays >= clientMap.get(receivable.client_id)?.reminder_delay_3 &&
-			diffDays < clientMap.get(receivable.client_id)?.reminder_delay_final &&
+			//diffDays < clientMap.get(receivable.client_id)?.reminder_delay_final &&
 			(receivable.reminder_status === 'none' ||
 				receivable.reminder_status === 'pre' ||
 				receivable.reminder_status === 'first' ||
@@ -410,6 +414,7 @@ const thirdReminders = async (
 			emailContent
 		);
 	}
+	return dueReceivables.map((item) => item.id) || [];
 };
 
 const finalReminders = async (
@@ -559,11 +564,55 @@ Deno.serve(async (req) => {
 			});
 		}
 
-		await sendDueEmails(supabaseClient, clientMap, transporter, data);
-		await sendFirstReminders(supabaseClient, clientMap, transporter, data);
-		await secondReminders(supabaseClient, clientMap, transporter, data);
-		await thirdReminders(supabaseClient, clientMap, transporter, data);
-		await finalReminders(supabaseClient, clientMap, transporter, data);
+		const notifiedIds1 = await sendDueEmails(
+			supabaseClient,
+			clientMap,
+			transporter,
+			data
+		);
+		// Filter all the records that an emai was not sent to and pass them to the next function
+		const notifiedIds2 = await sendFirstReminders(
+			supabaseClient,
+			clientMap,
+			transporter,
+			data.filter((record) => !notifiedIds1?.includes(record.id))
+		);
+		// Filter all the records that an emai was not sent to and pass them to the next function
+		const notifiedIds3 = await secondReminders(
+			supabaseClient,
+			clientMap,
+			transporter,
+			data.filter(
+				(record) => ![...notifiedIds1, ...notifiedIds2]?.includes(record.id)
+			)
+		);
+		// Filter all the records that an emai was not sent to and pass them to the next function
+		const notifiedIds4 = await thirdReminders(
+			supabaseClient,
+			clientMap,
+			transporter,
+			data.filter(
+				(record) =>
+					![...notifiedIds1, ...notifiedIds2, ...notifiedIds3]?.includes(
+						record.id
+					)
+			)
+		);
+		// Filter all the records that an emai was not sent to and pass them to the next function
+		await finalReminders(
+			supabaseClient,
+			clientMap,
+			transporter,
+			data.filter(
+				(record) =>
+					![
+						...notifiedIds1,
+						...notifiedIds2,
+						...notifiedIds3,
+						...notifiedIds4,
+					]?.includes(record.id)
+			)
+		);
 
 		return new Response(
 			JSON.stringify({
