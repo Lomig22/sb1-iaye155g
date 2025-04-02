@@ -1,9 +1,10 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { PopupWidget } from "react-calendly";
 import { Link, useNavigate } from "react-router-dom";
 import { TrendingUp } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { User } from "@supabase/supabase-js";
+import ContactModal from "../pages/ContactModal";
 
 interface AppHeaderProps {
   onContactClick: () => void;
@@ -13,7 +14,7 @@ interface AppHeaderProps {
 export default function AppHeader({ user }: AppHeaderProps) {
   const navigate = useNavigate();
   const calendlyRef = useRef<any>(null);
-
+  const [showContactModal, setShowContactModal] = useState(false);
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
     element?.scrollIntoView({ behavior: "smooth" });
@@ -55,9 +56,14 @@ export default function AppHeader({ user }: AppHeaderProps) {
           <Link to="/pricing" className="text-gray-600 hover:text-gray-900">
             Tarifs
           </Link>
-          <Link to="/contact" className="text-gray-600 hover:text-gray-900">
-            Contact
-          </Link>
+          <div className="hidden md:flex space-x-8">
+            <button
+              onClick={() => setShowContactModal(true)}
+              className="text-gray-600 hover:text-gray-900"
+            >
+              Contact
+            </button>
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
@@ -84,15 +90,30 @@ export default function AppHeader({ user }: AppHeaderProps) {
               </Link>
             </>
           )}
-          <PopupWidget
-            ref={calendlyRef}
-            url="https://calendly.com/paymentfloww/30min"
-            rootElement={document.getElementById("root")!}
-            text="planifier une réunion"
-            color="#2563eb"
-          />
         </div>
       </nav>
+      <div className="fixed bottom-20 right-4 z-[60]">
+        {" "}
+        {/* Increased from bottom-8 to bottom-12 */}
+        <button
+          onClick={() =>
+            (window as any).Calendly.initPopupWidget({
+              url: "https://calendly.com/paymentfloww/30min",
+            })
+          }
+          className="bg-blue-600 text-white px-6 py-3 rounded-2xl shadow-lg hover:bg-blue-700 transition-all"
+          // Changed to rounded-2xl for more rounding
+          style={{
+            background: "#2563eb",
+            color: "#ffffff",
+          }}
+        >
+          planifier une réunion
+        </button>
+      </div>
+      {showContactModal && (
+        <ContactModal onClose={() => setShowContactModal(false)} />
+      )}
     </header>
   );
 }

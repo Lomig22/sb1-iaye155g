@@ -1,6 +1,15 @@
 import React, { useState } from "react";
 import { Link, useLocation, Outlet, useNavigate } from "react-router-dom";
-import { TrendingUp, LogOut, X } from "lucide-react";
+import {
+  TrendingUp,
+  LogOut,
+  X,
+  Users,
+  Home,
+  FileText,
+  Settings,
+  Menu,
+} from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { AuthSessionMissingError } from "@supabase/supabase-js";
 
@@ -10,6 +19,7 @@ export default function Layout() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [logoutError, setLogoutError] = useState<string | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const handleLogout = async () => {
     try {
@@ -45,8 +55,73 @@ export default function Layout() {
     setLogoutError(null);
   };
 
+  const navigation = [
+    { name: "Tableau de bord", href: "/", icon: Home },
+    { name: "Clients", href: "/clients", icon: Users },
+    { name: "Créances", href: "/receivables", icon: FileText },
+    { name: "Paramètres", href: "/settings", icon: Settings },
+  ];
+
   return (
     <div className="min-h-screen bg-gray-100">
+      {/* Sidebar Toggle Button */}
+      <button
+        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        className="fixed top-4 left-4 z-50 p-2 rounded-md bg-white shadow-md hover:bg-gray-50"
+      >
+        <Menu className="h-6 w-6 text-gray-600" />
+      </button>
+
+      {/* Sidebar */}
+      <div
+        className={`fixed inset-y-0 left-0 w-64 bg-white shadow-lg transform transition-transform duration-200 ease-in-out ${
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <Link
+          to="/"
+          className="flex items-center h-16 px-4 border-b border-gray-200"
+        >
+          <TrendingUp className="h-8 w-8 text-blue-600" />
+          <span className="ml-2 text-xl font-bold text-gray-900">
+            PaymentFlow
+          </span>
+        </Link>
+
+        <nav className="mt-6 px-4 space-y-1">
+          {navigation.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.name}
+                to={item.href}
+                className={`
+                  flex items-center px-4 py-3 text-sm font-medium rounded-md
+                  ${
+                    location.pathname === item.href
+                      ? "bg-blue-50 text-blue-700"
+                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                  }
+                `}
+              >
+                <Icon className="h-5 w-5 mr-3" />
+                {item.name}
+              </Link>
+            );
+          })}
+        </nav>
+
+        <div className="absolute bottom-0 w-full p-4 border-t border-gray-200">
+          <button
+            onClick={() => setShowLogoutConfirm(true)}
+            className="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md"
+          >
+            <LogOut className="h-5 w-5 mr-3" />
+            Déconnexion
+          </button>
+        </div>
+      </div>
+
       {/* Main content */}
       <div>
         <main className="py-6">
