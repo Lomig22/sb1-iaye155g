@@ -151,8 +151,11 @@ const PricingPage = () => {
                 <span className="text-4xl font-bold">
                   {getPrice(29).displayedPrice}€
                 </span>
-                <span className="text-lg text-gray-500">
+                <span className="text-lg font-normal text-gray-500">
                   /{billingInterval === "monthly" ? "mois" : "an"}
+                  <sup className="text-sm ml-1 font-bold">
+                    HT {billingInterval === "monthly" ? "" : "-10%"}
+                  </sup>
                 </span>
               </div>
               <ul className="space-y-3 mb-8">
@@ -160,7 +163,6 @@ const PricingPage = () => {
                 <FeatureItem text="3 modèles de relance" />
                 <FeatureItem text="Rapports mensuels" />
                 <FeatureItem text="Support par email" />
-                <FeatureItem text="Hors Taxes 20%" />
               </ul>
               <button
                 onClick={() => handleStripePayment("basic")}
@@ -179,11 +181,11 @@ const PricingPage = () => {
                 <div className="bg-blue-500 text-white text-xs font-bold uppercase tracking-wider py-1 px-2 rounded-full inline-block mb-2">
                   Populaire
                 </div>
-                {billingInterval === "yearly" && (
+                {/* {billingInterval === "yearly" && (
                   <div className="bg-green-100 text-green-700 text-xs font-bold uppercase tracking-wider py-1 px-2 rounded-full">
                     -10%
                   </div>
-                )}
+                )} */}
               </div>
               <h3 className="text-xl font-bold mb-2">Pro</h3>
               <p className="text-gray-600 mb-6">Pour les PME en croissance</p>
@@ -196,8 +198,11 @@ const PricingPage = () => {
                 <span className="text-4xl font-bold">
                   {getPrice(79).displayedPrice}€
                 </span>
-                <span className="text-lg text-gray-500">
+                <span className="text-lg font-normal text-gray-500">
                   /{billingInterval === "monthly" ? "mois" : "an"}
+                  <sup className="text-sm ml-1 font-bold">
+                    HT {billingInterval === "monthly" ? "" : "-10%"}
+                  </sup>
                 </span>
               </div>
               <ul className="space-y-3 mb-8">
@@ -206,7 +211,6 @@ const PricingPage = () => {
                 <FeatureItem text="Rapports hebdomadaires" />
                 <FeatureItem text="Support prioritaire" />
                 <FeatureItem text="Intégration comptable" />
-                <FeatureItem text="Hors Taxes 20%" />
               </ul>
               <button
                 onClick={() => handleStripePayment("pro")}
@@ -234,8 +238,11 @@ const PricingPage = () => {
                 <span className="text-4xl font-bold">
                   {getPrice(199).displayedPrice}€
                 </span>
-                <span className="text-lg text-gray-500">
+                <span className="text-lg font-normal text-gray-500">
                   /{billingInterval === "monthly" ? "mois" : "an"}
+                  <sup className="text-sm ml-1 font-bold">
+                    HT {billingInterval === "monthly" ? "" : "-10%"}
+                  </sup>
                 </span>
               </div>
               <ul className="space-y-3 mb-8">
@@ -244,7 +251,6 @@ const PricingPage = () => {
                 <FeatureItem text="Rapports personnalisés" />
                 <FeatureItem text="Support dédié 24/7" />
                 <FeatureItem text="API complète" />
-                <FeatureItem text="Hors Taxes 20%" />
               </ul>
               <button
                 onClick={() => handleStripePayment("enterprise")}

@@ -32,7 +32,7 @@ export default function LoginPage() {
         throw error;
       }
 
-      navigate("/landing");
+      navigate("");
     } catch (error: any) {
       setMessage({
         type: "error",
@@ -47,7 +47,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gray-100/80 backdrop-blur-sm flex items-center justify-center p-4 fixed inset-0 z-50">
       <div className="max-w-md w-full bg-white rounded-lg shadow-xl p-8 relative">
         <button
-          onClick={() => navigate("/landing")}
+          onClick={() => navigate("")}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
         >
           <ArrowLeft className="h-6 w-6" />
@@ -144,7 +144,7 @@ export default function LoginPage() {
         </form>
 
         <button
-          onClick={() => navigate("/landing")}
+          onClick={() => navigate("")}
           className="mt-6 w-full flex items-center justify-center text-gray-600 hover:text-gray-800 transition-colors"
         >
           <ArrowLeft className="h-5 w-5 mr-2" />

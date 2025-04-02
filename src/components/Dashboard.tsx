@@ -1,7 +1,16 @@
-import React, { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
-import { BarChart3, Users, AlertCircle, CheckCircle2, Clock, TrendingUp, AlertTriangle, BanknoteIcon } from 'lucide-react';
-import { Client, Receivable } from '../types/database';
+import React, { useEffect, useState } from "react";
+import { supabase } from "../lib/supabase";
+import {
+  BarChart3,
+  Users,
+  AlertCircle,
+  CheckCircle2,
+  Clock,
+  TrendingUp,
+  AlertTriangle,
+  BanknoteIcon,
+} from "lucide-react";
+import { Client, Receivable } from "../types/database";
 
 interface DashboardStats {
   totalClients: number;
@@ -36,8 +45,8 @@ export default function Dashboard() {
       second: 0,
       third: 0,
       final: 0,
-      legal: 0
-    }
+      legal: 0,
+    },
   });
   const [loading, setLoading] = useState(true);
 
@@ -46,17 +55,25 @@ export default function Dashboard() {
 
     // Mettre en place un écouteur pour les changements en temps réel
     const clientsSubscription = supabase
-      .channel('clients-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'clients' }, () => {
-        fetchDashboardStats();
-      })
+      .channel("clients-changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "clients" },
+        () => {
+          fetchDashboardStats();
+        }
+      )
       .subscribe();
 
     const receivablesSubscription = supabase
-      .channel('receivables-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'receivables' }, () => {
-        fetchDashboardStats();
-      })
+      .channel("receivables-changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "receivables" },
+        () => {
+          fetchDashboardStats();
+        }
+      )
       .subscribe();
 
     return () => {
@@ -68,15 +85,17 @@ export default function Dashboard() {
   const getReminderStep = (receivable: Receivable & { client: Client }) => {
     const dueDate = new Date(receivable.due_date);
     const today = new Date();
-    const daysLate = Math.ceil((today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
+    const daysLate = Math.ceil(
+      (today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
 
     if (daysLate <= 0) return null;
 
     const delays = [
-      { days: receivable.client.reminder_delay_1 || 15, step: 'first' },
-      { days: receivable.client.reminder_delay_2 || 30, step: 'second' },
-      { days: receivable.client.reminder_delay_3 || 45, step: 'third' },
-      { days: receivable.client.reminder_delay_final || 60, step: 'final' }
+      { days: receivable.client.reminder_delay_1 || 15, step: "first" },
+      { days: receivable.client.reminder_delay_2 || 30, step: "second" },
+      { days: receivable.client.reminder_delay_3 || 45, step: "third" },
+      { days: receivable.client.reminder_delay_final || 60, step: "final" },
     ];
 
     for (let i = delays.length - 1; i >= 0; i--) {
@@ -92,15 +111,14 @@ export default function Dashboard() {
     try {
       // Récupérer les clients
       const { data: clientsData, error: clientsError } = await supabase
-        .from('clients')
-        .select('*');
+        .from("clients")
+        .select("*");
 
       if (clientsError) throw clientsError;
 
       // Récupérer les créances avec leurs clients
-      const { data: receivablesData, error: receivablesError } = await supabase
-        .from('receivables')
-        .select(`
+      const { data: receivablesData, error: receivablesError } =
+        await supabase.from("receivables").select(`
           *,
           client:clients(*)
         `);
@@ -109,28 +127,42 @@ export default function Dashboard() {
 
       // Calculer les statistiques
       const totalClients = clientsData?.length || 0;
-      const clientsNeedingReminder = clientsData?.filter(c => c.needs_reminder)?.length || 0;
+      const clientsNeedingReminder =
+        clientsData?.filter((c) => c.needs_reminder)?.length || 0;
 
       const receivables = receivablesData || [];
       const totalReceivables = receivables.length;
       const totalAmount = receivables.reduce((sum, r) => sum + r.amount, 0);
 
       const today = new Date();
-      const overdueReceivables = receivables.filter(r => new Date(r.due_date) < today);
-      const overdueAmount = overdueReceivables.reduce((sum, r) => sum + r.amount, 0);
+      const overdueReceivables = receivables.filter(
+        (r) => new Date(r.due_date) < today
+      );
+      const overdueAmount = overdueReceivables.reduce(
+        (sum, r) => sum + r.amount,
+        0
+      );
 
       // Calculer les retards de paiement moyens
       const delays = receivables
-        .filter(r => r.status === 'paid')
-        .map(r => {
+        .filter((r) => r.status === "paid")
+        .map((r) => {
           const dueDate = new Date(r.due_date);
           const paidDate = new Date(r.updated_at);
-          return Math.max(0, Math.ceil((paidDate.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)));
+          return Math.max(
+            0,
+            Math.ceil(
+              (paidDate.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)
+            )
+          );
         });
 
-      const averagePaymentDelay = delays.length > 0
-        ? Math.round(delays.reduce((sum, delay) => sum + delay, 0) / delays.length)
-        : 0;
+      const averagePaymentDelay =
+        delays.length > 0
+          ? Math.round(
+              delays.reduce((sum, delay) => sum + delay, 0) / delays.length
+            )
+          : 0;
 
       // Calculer les étapes de relance
       const reminderSteps = {
@@ -138,11 +170,11 @@ export default function Dashboard() {
         second: 0,
         third: 0,
         final: 0,
-        legal: 0
+        legal: 0,
       };
 
-      receivables.forEach(receivable => {
-        if (receivable.status === 'legal') {
+      receivables.forEach((receivable) => {
+        if (receivable.status === "legal") {
           reminderSteps.legal++;
         } else {
           const step = getReminderStep(receivable);
@@ -156,15 +188,16 @@ export default function Dashboard() {
         totalClients,
         clientsNeedingReminder,
         activeReminders: overdueReceivables.length,
-        resolvedReminders: receivables.filter(r => r.status === 'paid').length,
+        resolvedReminders: receivables.filter((r) => r.status === "paid")
+          .length,
         totalReceivables,
         totalAmount,
         overdueAmount,
         averagePaymentDelay,
-        reminderSteps
+        reminderSteps,
       });
     } catch (error) {
-      console.error('Erreur lors de la récupération des statistiques:', error);
+      console.error("Erreur lors de la récupération des statistiques:", error);
     } finally {
       setLoading(false);
     }
@@ -182,7 +215,9 @@ export default function Dashboard() {
     <div className="p-6">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Tableau de bord</h1>
-        <p className="mt-2 text-gray-600">Vue d'ensemble de vos relances clients</p>
+        <p className="mt-2 text-gray-600">
+          Vue d'ensemble de vos relances clients
+        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -195,7 +230,9 @@ export default function Dashboard() {
             <TrendingUp className="h-5 w-5 text-green-500" />
           </div>
           <h3 className="text-gray-600 text-sm font-medium">Total Clients</h3>
-          <p className="text-2xl font-bold text-gray-900 mt-2">{stats.totalClients}</p>
+          <p className="text-2xl font-bold text-gray-900 mt-2">
+            {stats.totalClients}
+          </p>
         </div>
 
         {/* Montant total des créances */}
@@ -207,9 +244,9 @@ export default function Dashboard() {
           </div>
           <h3 className="text-gray-600 text-sm font-medium">Montant total</h3>
           <p className="text-2xl font-bold text-gray-900 mt-2">
-            {new Intl.NumberFormat('fr-FR', {
-              style: 'currency',
-              currency: 'EUR'
+            {new Intl.NumberFormat("fr-FR", {
+              style: "currency",
+              currency: "EUR",
             }).format(stats.totalAmount)}
           </p>
         </div>
@@ -221,11 +258,13 @@ export default function Dashboard() {
               <AlertCircle className="h-6 w-6 text-red-600" />
             </div>
           </div>
-          <h3 className="text-gray-600 text-sm font-medium">Montant en retard</h3>
+          <h3 className="text-gray-600 text-sm font-medium">
+            Montant en retard
+          </h3>
           <p className="text-2xl font-bold text-red-600 mt-2">
-            {new Intl.NumberFormat('fr-FR', {
-              style: 'currency',
-              currency: 'EUR'
+            {new Intl.NumberFormat("fr-FR", {
+              style: "currency",
+              currency: "EUR",
             }).format(stats.overdueAmount)}
           </p>
         </div>
@@ -237,7 +276,9 @@ export default function Dashboard() {
               <Clock className="h-6 w-6 text-yellow-600" />
             </div>
           </div>
-          <h3 className="text-gray-600 text-sm font-medium">Retard moyen de paiement</h3>
+          <h3 className="text-gray-600 text-sm font-medium">
+            Retard moyen de paiement
+          </h3>
           <p className="text-2xl font-bold text-gray-900 mt-2">
             {stats.averagePaymentDelay} jours
           </p>
@@ -248,7 +289,9 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Étapes de relance */}
         <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-6">Étapes de relance</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-6">
+            Étapes de relance
+          </h3>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">1ère relance</span>
@@ -257,11 +300,16 @@ export default function Dashboard() {
                   <div
                     className="bg-yellow-500 h-2 rounded-full"
                     style={{
-                      width: `${(stats.reminderSteps.first / stats.totalReceivables) * 100}%`
+                      width: `${
+                        (stats.reminderSteps.first / stats.totalReceivables) *
+                        100
+                      }%`,
                     }}
                   />
                 </div>
-                <span className="text-sm font-medium">{stats.reminderSteps.first}</span>
+                <span className="text-sm font-medium">
+                  {stats.reminderSteps.first}
+                </span>
               </div>
             </div>
             <div className="flex items-center justify-between">
@@ -271,11 +319,16 @@ export default function Dashboard() {
                   <div
                     className="bg-orange-500 h-2 rounded-full"
                     style={{
-                      width: `${(stats.reminderSteps.second / stats.totalReceivables) * 100}%`
+                      width: `${
+                        (stats.reminderSteps.second / stats.totalReceivables) *
+                        100
+                      }%`,
                     }}
                   />
                 </div>
-                <span className="text-sm font-medium">{stats.reminderSteps.second}</span>
+                <span className="text-sm font-medium">
+                  {stats.reminderSteps.second}
+                </span>
               </div>
             </div>
             <div className="flex items-center justify-between">
@@ -285,11 +338,16 @@ export default function Dashboard() {
                   <div
                     className="bg-red-500 h-2 rounded-full"
                     style={{
-                      width: `${(stats.reminderSteps.third / stats.totalReceivables) * 100}%`
+                      width: `${
+                        (stats.reminderSteps.third / stats.totalReceivables) *
+                        100
+                      }%`,
                     }}
                   />
                 </div>
-                <span className="text-sm font-medium">{stats.reminderSteps.third}</span>
+                <span className="text-sm font-medium">
+                  {stats.reminderSteps.third}
+                </span>
               </div>
             </div>
             <div className="flex items-center justify-between">
@@ -299,11 +357,16 @@ export default function Dashboard() {
                   <div
                     className="bg-purple-500 h-2 rounded-full"
                     style={{
-                      width: `${(stats.reminderSteps.final / stats.totalReceivables) * 100}%`
+                      width: `${
+                        (stats.reminderSteps.final / stats.totalReceivables) *
+                        100
+                      }%`,
                     }}
                   />
                 </div>
-                <span className="text-sm font-medium">{stats.reminderSteps.final}</span>
+                <span className="text-sm font-medium">
+                  {stats.reminderSteps.final}
+                </span>
               </div>
             </div>
             <div className="flex items-center justify-between">
@@ -313,11 +376,16 @@ export default function Dashboard() {
                   <div
                     className="bg-red-700 h-2 rounded-full"
                     style={{
-                      width: `${(stats.reminderSteps.legal / stats.totalReceivables) * 100}%`
+                      width: `${
+                        (stats.reminderSteps.legal / stats.totalReceivables) *
+                        100
+                      }%`,
                     }}
                   />
                 </div>
-                <span className="text-sm font-medium">{stats.reminderSteps.legal}</span>
+                <span className="text-sm font-medium">
+                  {stats.reminderSteps.legal}
+                </span>
               </div>
             </div>
           </div>
@@ -325,35 +393,51 @@ export default function Dashboard() {
 
         {/* Statistiques générales */}
         <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-6">Statistiques générales</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-6">
+            Statistiques générales
+          </h3>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Clients à relancer</span>
-              <span className="text-sm font-medium">{stats.clientsNeedingReminder}</span>
+              <span className="text-sm font-medium">
+                {stats.clientsNeedingReminder}
+              </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Relances actives</span>
-              <span className="text-sm font-medium">{stats.activeReminders}</span>
+              <span className="text-sm font-medium">
+                {stats.activeReminders}
+              </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Relances résolues</span>
-              <span className="text-sm font-medium">{stats.resolvedReminders}</span>
+              <span className="text-sm font-medium">
+                {stats.resolvedReminders}
+              </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Taux de résolution</span>
               <span className="text-sm font-medium">
                 {stats.totalReceivables > 0
-                  ? `${Math.round((stats.resolvedReminders / stats.totalReceivables) * 100)}%`
-                  : '0%'}
+                  ? `${Math.round(
+                      (stats.resolvedReminders / stats.totalReceivables) * 100
+                    )}%`
+                  : "0%"}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Montant moyen des créances</span>
+              <span className="text-sm text-gray-600">
+                Montant moyen des créances
+              </span>
               <span className="text-sm font-medium">
-                {new Intl.NumberFormat('fr-FR', {
-                  style: 'currency',
-                  currency: 'EUR'
-                }).format(stats.totalReceivables > 0 ? stats.totalAmount / stats.totalReceivables : 0)}
+                {new Intl.NumberFormat("fr-FR", {
+                  style: "currency",
+                  currency: "EUR",
+                }).format(
+                  stats.totalReceivables > 0
+                    ? stats.totalAmount / stats.totalReceivables
+                    : 0
+                )}
               </span>
             </div>
           </div>

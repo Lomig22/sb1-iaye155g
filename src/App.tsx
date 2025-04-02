@@ -9,7 +9,7 @@ import { supabase, checkAuth } from "./lib/supabase";
 import { User } from "@supabase/supabase-js";
 import { startReminderService } from "./lib/reminderService";
 
-import LandingPage from "./components/LandingPage";
+import LandingPage from "./pages/LandingPage";
 import SignupPage from "./pages/SignupPage";
 import Layout from "./components/Layout";
 import ResetPassword from "./components/ResetPassword";
@@ -70,31 +70,27 @@ function App() {
       <AppHeader user={user} onContactClick={() => {}} />
       <Routes>
         {/* Public routes */}
+        <Route path="/" element={<LandingPage onGetStarted={() => {}} />} />
         <Route
           path="/signup"
-          element={!user ? <SignupPage /> : <Navigate to="/landing" replace />}
+          element={
+            !user ? <SignupPage /> : <Navigate to="/dashboard" replace />
+          }
         />
         <Route
           path="/login"
-          element={!user ? <LoginPage /> : <Navigate to="/landing" replace />}
+          element={!user ? <LoginPage /> : <Navigate to="/dashboard" replace />}
         />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/pricing" element={<PricingPage />} />
-
-        {/* Main landing page */}
-        <Route
-          path="/landing"
-          element={!user ? <LandingPage /> : <Navigate to="/" replace />}
-        />
-
         <Route path="/contact" element={<ContactPage />} />
 
         {/* Auth-protected routes */}
         <Route
           path="/"
-          element={user ? <Layout /> : <Navigate to="/landing" replace />}
+          element={user ? <Layout /> : <Navigate to="/login" replace />}
         >
-          <Route index element={<LandingPage onGetStarted={() => {}} />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/clients" element={<ClientPage />} />
           <Route path="/receivables" element={<ReceivablesList />} />
           <Route path="/settings" element={<Settings />} />
@@ -103,7 +99,7 @@ function App() {
         {/* Redirects */}
         <Route
           path="*"
-          element={<Navigate to={user ? "/" : "/landing"} replace />}
+          element={<Navigate to={user ? "/dashboard" : "/"} replace />}
         />
       </Routes>
     </Router>

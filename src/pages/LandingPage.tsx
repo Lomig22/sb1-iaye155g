@@ -1,5 +1,6 @@
 import React, { useState, useRef } from "react";
 import { motion, useInView } from "framer-motion";
+import { InlineWidget } from "react-calendly";
 
 import {
   BarChart2,
@@ -19,6 +20,7 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 
 import { User } from "@supabase/supabase-js";
+import { Link } from "react-router-dom";
 interface LandingPageProps {
   onGetStarted: () => void;
   user?: User; // Add this if you want to pass the user as a prop
@@ -219,12 +221,11 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
               Automatisez et personnalisez vos relances commerciales pour
               convertir plus de prospects en clients fidèles.
             </p>
-            <button
-              onClick={onGetStarted}
-              className="bg-blue-600 text-white px-8 py-4 rounded-md text-lg font-medium hover:bg-blue-700 transition-colors"
-            >
-              Essayer gratuitement
-            </button>
+            <Link to="/signup">
+              <button className="bg-blue-600 text-white px-8 py-4 rounded-md text-lg font-medium hover:bg-blue-700 transition-colors">
+                Essayer gratuitement
+              </button>
+            </Link>
           </motion.div>
           {/* Features */}
           <motion.div
@@ -445,8 +446,8 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
               className="text-3xl font-bold text-center mb-8"
               variants={fadeInLeft}
             >
-              Tarifs simples et transparents
-              <div className="flex items-center justify-center gap-4">
+              <span className="mb-4">Tarifs simples et transparents</span>
+              <div className="flex items-center justify-center gap-4 mt-8">
                 <button
                   onClick={() => setBillingInterval("monthly")}
                   className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -489,6 +490,9 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                   {getPrice(29).displayedPrice}€
                   <span className="text-lg font-normal text-gray-500">
                     /{billingInterval === "monthly" ? "mois" : "an"}
+                    <sup className="text-sm ml-1 font-bold">
+                      HT {billingInterval === "monthly" ? "" : "-10%"}
+                    </sup>
                   </span>
                 </p>
                 <ul className="space-y-3 mb-8">
@@ -507,10 +511,6 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                   <li className="flex items-start">
                     <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
                     <span>Support par email</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span>Hors Taxes 20%</span>
                   </li>
                 </ul>
                 <button
@@ -542,6 +542,9 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                   {getPrice(79).displayedPrice}€
                   <span className="text-lg font-normal text-gray-500">
                     /{billingInterval === "monthly" ? "mois" : "an"}
+                    <sup className="text-sm ml-1 font-bold">
+                      HT {billingInterval === "monthly" ? "" : "-10%"}
+                    </sup>
                   </span>
                 </p>
                 <ul className="space-y-3 mb-8">
@@ -564,10 +567,6 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                   <li className="flex items-start">
                     <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
                     <span>Intégration comptable</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span>Hors Taxes 20%</span>
                   </li>
                 </ul>
                 <button
@@ -596,6 +595,9 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                   {getPrice(199).displayedPrice}€
                   <span className="text-lg font-normal text-gray-500">
                     /{billingInterval === "monthly" ? "mois" : "an"}
+                    <sup className="text-sm ml-1 font-bold">
+                      HT {billingInterval === "monthly" ? "" : "-10%"}
+                    </sup>
                   </span>
                 </p>
                 <ul className="space-y-3 mb-8">
@@ -619,10 +621,6 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                     <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
                     <span>API complète</span>
                   </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span>Hors Taxes 20%</span>
-                  </li>
                 </ul>
                 <button
                   onClick={() => handleStripePayment("enterprise")}
@@ -637,11 +635,12 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
           {/* Testimonials */}
           <motion.div
             id="testimonials"
-            className="mt-32"
+            className="mt-32 relative"
             variants={staggerContainer}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 1 }}
+            style={{ marginBottom: 0, paddingBottom: 0 }}
           >
             <motion.h2
               className="text-3xl font-bold text-center mb-16"
@@ -651,24 +650,27 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
             </motion.h2>
 
             <div className="px-4 relative mb-10">
+              {/* Navigation arrows */}
+              <div className="swiper-button-prev testimonial-prev left-0 text-blue-600 hover:text-blue-800 transition-colors"></div>
+              <div className="swiper-button-next testimonial-next right-0 text-blue-600 hover:text-blue-800 transition-colors"></div>
+
               <Swiper
                 modules={[Navigation, Pagination]}
+                navigation={{
+                  prevEl: ".testimonial-prev",
+                  nextEl: ".testimonial-next",
+                }}
                 spaceBetween={30}
                 pagination={{
                   clickable: true,
                 }}
                 slidesPerView={1}
                 breakpoints={{
-                  640: {
-                    slidesPerView: 1,
-                  },
-                  768: {
-                    slidesPerView: 2,
-                  },
-                  1024: {
-                    slidesPerView: 3,
-                  },
+                  640: { slidesPerView: 1 },
+                  768: { slidesPerView: 2 },
+                  1024: { slidesPerView: 3 },
                 }}
+                style={{ padding: "0 40px" }} // Add padding for arrow spacing
               >
                 {[
                   {
@@ -741,8 +743,61 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                   </SwiperSlide>
                 ))}
               </Swiper>
+              <style jsx global>{`
+                .testimonial-prev,
+                .testimonial-next {
+                  position: absolute;
+                  top: 50%;
+                  transform: translateY(-50%);
+                  width: 40px;
+                  height: 40px;
+                  background: white;
+                  border-radius: 50%;
+                  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                  z-index: 10;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  cursor: pointer;
+                  transition: all 0.3s ease;
+                }
+
+                .testimonial-prev:hover,
+                .testimonial-next:hover {
+                  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+                  transform: translateY(-50%) scale(1.05);
+                }
+
+                .testimonial-prev::after,
+                .testimonial-next::after {
+                  font-size: 1.5rem;
+                  color: currentColor;
+                  font-weight: bold;
+                }
+
+                @media (max-width: 768px) {
+                  .testimonial-prev,
+                  .testimonial-next {
+                    display: none;
+                  }
+                }
+              `}</style>
             </div>
           </motion.div>
+        </div>
+        <div
+          className="calendly-container"
+          style={{ marginTop: "-10rem", padding: 0, height: "700px" }}
+        >
+          <InlineWidget
+            url="https://calendly.com/paymentfloww/30min"
+            styles={{
+              height: "100%",
+              width: "100%",
+              margin: "0",
+              padding: "0",
+            }}
+          />
         </div>
       </main>
 

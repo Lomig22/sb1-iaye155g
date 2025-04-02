@@ -12,7 +12,7 @@ interface AppHeaderProps {
 
 export default function AppHeader({ user }: AppHeaderProps) {
   const navigate = useNavigate();
-  const calendlyRef = useRef<any>(null); // Use 'any' type if TypeScript complains
+  const calendlyRef = useRef<any>(null);
 
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
@@ -23,7 +23,7 @@ export default function AppHeader({ user }: AppHeaderProps) {
     try {
       const { error } = await supabase.auth.signOut();
       if (!error) {
-        navigate("/landing");
+        navigate("/");
       }
     } catch (error) {
       console.error("Error signing out:", error);
@@ -60,29 +60,38 @@ export default function AppHeader({ user }: AppHeaderProps) {
           </Link>
         </div>
 
-        {user ? (
-          <button
-            onClick={handleSignOut}
-            className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
-          >
-            Déconnexion
-          </button>
-        ) : (
-          <Link
-            to="/signup"
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-          >
-            Commencer
-          </Link>
-        )}
-        {/* Calendly Popup Widget - Hidden until button click */}
-        <PopupWidget
-          ref={calendlyRef}
-          url="https://calendly.com/huzaifaali2002/30min" // Replace with your Calendly URL
-          rootElement={document.getElementById("root")!}
-          text="planifier une réunion"
-          color="#2563eb"
-        />
+        <div className="flex items-center gap-2">
+          {user ? (
+            <button
+              onClick={handleSignOut}
+              className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
+            >
+              Déconnexion
+            </button>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className=" text-blue-600 px-4 py-2 rounded-md underline hover:bg-blue-50 transition-colors"
+              >
+                Connexion
+              </Link>
+              <Link
+                to="/signup"
+                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+              >
+                S'inscrire
+              </Link>
+            </>
+          )}
+          <PopupWidget
+            ref={calendlyRef}
+            url="https://calendly.com/paymentfloww/30min"
+            rootElement={document.getElementById("root")!}
+            text="planifier une réunion"
+            color="#2563eb"
+          />
+        </div>
       </nav>
     </header>
   );

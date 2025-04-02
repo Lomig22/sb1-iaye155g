@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { X, CheckCircle } from "lucide-react";
-import { sendContactForm } from "../lib/contactService";
 import { Link } from "react-router-dom";
 
 const ContactPage = () => {
@@ -24,14 +23,21 @@ const ContactPage = () => {
     setContactError(null);
 
     try {
-      const success = await sendContactForm({
-        name: contactFormData.name,
-        email: contactFormData.email,
-        subject: contactFormData.subject,
-        message: contactFormData.message,
+      const response = await fetch("https://formspree.io/f/mqapyeby", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: contactFormData.name,
+          email: contactFormData.email,
+          subject: contactFormData.subject,
+          message: contactFormData.message,
+          _gotcha: "", // Honeypot field
+        }),
       });
 
-      if (success) {
+      if (response.ok) {
         setContactSubmitted(true);
         setContactFormData({
           name: "",
@@ -41,14 +47,15 @@ const ContactPage = () => {
           privacy: false,
         });
       } else {
-        setContactError(
-          "Une erreur est survenue lors de l'envoi du message. Veuillez réessayer plus tard."
-        );
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to send message");
       }
     } catch (error) {
       console.error("Erreur lors de l'envoi du formulaire:", error);
       setContactError(
-        "Une erreur est survenue lors de l'envoi du message. Veuillez réessayer plus tard."
+        error instanceof Error
+          ? error.message
+          : "Une erreur est survenue lors de l'envoi du message. Veuillez réessayer plus tard."
       );
     } finally {
       setContactSubmitting(false);
@@ -183,6 +190,14 @@ const ContactPage = () => {
                   required
                 ></textarea>
               </div>
+
+              {/* Honeypot field */}
+              <input
+                type="text"
+                name="_gotcha"
+                style={{ display: "none" }}
+                tabIndex={-1}
+              />
 
               <div className="flex items-start">
                 <input
