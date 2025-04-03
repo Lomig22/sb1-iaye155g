@@ -166,7 +166,7 @@ export default function AppHeader({ user }: AppHeaderProps) {
       )}
 
       {/* Calendly Button - Adjusted for mobile */}
-      <div className="fixed bottom-4 bottom-20 right-4 z-[60] md:bottom-20">
+      <div className="fixed bottom-20 right-4 z-[60] md:bottom-20">
         <button
           onClick={() =>
             (window as any).Calendly.initPopupWidget({
