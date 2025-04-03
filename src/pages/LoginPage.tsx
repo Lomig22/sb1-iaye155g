@@ -153,14 +153,12 @@ export default function LoginPage() {
             </p>
           </div>
         </form>
-
-        <button
-          onClick={() => navigate("")}
-          className="mt-6 w-full flex items-center justify-center text-gray-600 hover:text-gray-800 transition-colors"
-        >
-          <ArrowLeft className="h-5 w-5 mr-2" />
-          Retour à l'accueil
-        </button>
+        <Link to="/">
+          <button className="mt-6 w-full flex items-center justify-center text-gray-600 hover:text-gray-800 transition-colors">
+            <ArrowLeft className="h-5 w-5 mr-2" />
+            Retour à l'accueil
+          </button>
+        </Link>
       </div>
     </div>
   );
