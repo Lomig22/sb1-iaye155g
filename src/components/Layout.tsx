@@ -64,30 +64,36 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* Sidebar Toggle Button */}
-      <button
-        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-        className="fixed top-4 left-4 z-50 p-2 rounded-md bg-white shadow-md hover:bg-gray-50"
-      >
-        <Menu className="h-6 w-6 text-gray-600" />
-      </button>
+      {/* Fixed Header */}
+      <div className="fixed top-0 left-0 right-0 h-16 bg-white shadow-sm z-50 flex items-center justify-between px-4">
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="p-2 rounded-md hover:bg-gray-100"
+          >
+            <Menu className="h-6 w-6 text-gray-600" />
+          </button>
+          <Link to="/" className="flex items-center space-x-2">
+            <TrendingUp className="h-8 w-8 text-blue-600" />
+            <span className="text-xl font-bold text-gray-900">PaymentFlow</span>
+          </Link>
+        </div>
+
+        <button
+          onClick={() => setShowLogoutConfirm(true)}
+          className="flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-md"
+        >
+          <LogOut className="h-5 w-5 mr-2" />
+          Déconnexion
+        </button>
+      </div>
 
       {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 w-64 bg-white shadow-lg transform transition-transform duration-200 ease-in-out ${
+        className={`fixed inset-y-0 left-0 w-64 bg-white shadow-lg transform transition-transform duration-200 ease-in-out z-40 ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <Link
-          to="/"
-          className="flex items-center h-16 px-4 border-b border-gray-200"
-        >
-          <TrendingUp className="h-8 w-8 text-blue-600" />
-          <span className="ml-2 text-xl font-bold text-gray-900">
-            PaymentFlow
-          </span>
-        </Link>
-
         <nav className="mt-6 px-4 space-y-1">
           {navigation.map((item) => {
             const Icon = item.icon;
@@ -123,22 +129,13 @@ export default function Layout() {
       </div>
 
       {/* Main content */}
-      <div>
+      <div className="pt-16">
         <main className="py-6">
           <Outlet />
         </main>
       </div>
 
-      {/* Logout button in top-right corner */}
-      <button
-        onClick={() => setShowLogoutConfirm(true)}
-        className="fixed top-4 right-4 flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md"
-      >
-        <LogOut className="h-5 w-5 mr-2" />
-        Déconnexion
-      </button>
-
-      {/* Modal de confirmation de déconnexion */}
+      {/* Logout Confirmation Modal */}
       {showLogoutConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
