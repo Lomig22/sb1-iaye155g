@@ -248,7 +248,11 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
           <motion.div
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, margin: "-100px", amount: 1 }}
+            viewport={{
+              once: true,
+              margin: window.innerWidth < 768 ? "-20px" : "-100px",
+              amount: window.innerWidth < 768 ? 0.1 : 0.25,
+            }}
             variants={fadeInUp}
             className="text-center"
           >
@@ -271,7 +275,11 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
             className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-12"
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, margin: "-100px", amount: 1 }}
+            viewport={{
+              once: true,
+              margin: window.innerWidth < 768 ? "-20px" : "-100px",
+              amount: window.innerWidth < 768 ? 0.1 : 0.25,
+            }}
             variants={staggerContainer}
           >
             {/* Add group class to each feature card */}
@@ -562,7 +570,7 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
               {/* Pro Plan */}
               <motion.div
                 variants={fadeInLeft}
-                className="bg-white rounded-lg shadow-lg p-8 border-2 border-blue-500 transform scale-105 z-10"
+                className="bg-white rounded-lg shadow-lg p-8 border-2 border-blue-500 md:transform md:scale-105 z-10"
               >
                 <div className="bg-blue-500 text-white text-xs font-bold uppercase tracking-wider py-1 px-2 rounded-full inline-block mb-2">
                   Populaire
@@ -751,7 +759,7 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                   <SwiperSlide key={index}>
                     <motion.div
                       variants={fadeInLeft}
-                      className="bg-white rounded-lg shadow-lg p-8 border border-gray-200 h-[250px] mx-4 my-10 flex flex-col"
+                      className="bg-white rounded-lg shadow-lg p-8 border border-gray-200 min-h-[250px] mx-4 my-10 flex flex-col"
                     >
                       <div className="flex items-center mb-6">
                         <img
@@ -781,7 +789,7 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                   </SwiperSlide>
                 ))}
               </Swiper>
-              <style jsx global>{`
+              <style>{`
                 .testimonial-prev,
                 .testimonial-next {
                   position: absolute;
@@ -825,7 +833,12 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
         </div>
         <div
           className="calendly-container"
-          style={{ marginTop: "-10rem", padding: 0, height: "700px" }}
+          style={{
+            marginTop: "2rem",
+            padding: 0,
+            height: "100vh",
+            maxHeight: "700px",
+          }}
         >
           <InlineWidget
             url="https://calendly.com/paymentfloww/30min"
