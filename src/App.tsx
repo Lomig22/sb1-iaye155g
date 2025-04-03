@@ -84,15 +84,25 @@ function App() {
         />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/pricing" element={<PricingPage />} />
-
-        <Route path="/payment-success" element={<PaymentSuccess />} />
-
+        <Route path="/reset-password" element={<ResetPassword />} />
         {/* Auth-protected routes */}
         <Route
           path="/"
           element={user ? <Layout /> : <Navigate to="/login" replace />}
         >
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="dashboard">
+            <Route
+              index
+              element={
+                <Navigate
+                  to={`/dashboard/${encodeURIComponent(user?.email || "")}`}
+                  replace
+                />
+              }
+            />
+            <Route path=":email" element={<Dashboard user={user} />} />
+          </Route>
+
           <Route path="/clients" element={<ClientPage />} />
           <Route path="/receivables" element={<ReceivablesList />} />
           <Route path="/settings" element={<Settings />} />

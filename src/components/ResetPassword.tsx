@@ -1,7 +1,8 @@
-import React, { useState } from "react";
-import { Lock } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { AlertCircle, CheckCircle, Lock } from "lucide-react";
 import { supabase } from "../lib/supabase";
-import AppHeader from "./AppHeader";
+import { useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const validatePassword = (password: string) => {
   const minLength = password.length >= 8;
@@ -30,6 +31,43 @@ export default function ResetPassword() {
   } | null>(null);
   const [showPasswordRequirements, setShowPasswordRequirements] =
     useState(false);
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const [isValidLink, setIsValidLink] = useState(true);
+
+  useEffect(() => {
+    const handleAuthentication = async () => {
+      const code = searchParams.get("code");
+      const type = searchParams.get("type");
+
+      // Only handle password reset flow
+      if (type === "recovery" && code) {
+        try {
+          const { error } = await supabase.auth.exchangeAuthCodeForSession({
+            code,
+          });
+
+          if (error) {
+            setIsValidLink(false);
+            setMessage({
+              type: "error",
+              text: "Lien de réinitialisation invalide ou expiré",
+            });
+          }
+        } catch (error) {
+          setIsValidLink(false);
+          setMessage({
+            type: "error",
+            text: "Lien de réinitialisation invalide ou expiré",
+          });
+        }
+      } else {
+        setIsValidLink(false);
+      }
+    };
+
+    handleAuthentication();
+  }, [navigate, searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,19 +107,15 @@ export default function ResetPassword() {
 
       setMessage({
         type: "success",
-        text: "Votre mot de passe a été mis à jour avec succès. Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.",
+        text: "Mot de passe mis à jour avec succès! Vous pouvez maintenant vous connecter.",
       });
 
-      // Rediriger vers la page d'accueil après 3 secondes
-      setTimeout(() => {
-        window.location.href = "/";
-      }, 3000);
+      // Clear session after successful password reset
+      await supabase.auth.signOut();
     } catch (error: any) {
       setMessage({
         type: "error",
-        text:
-          error.message ||
-          "Une erreur est survenue lors de la mise à jour du mot de passe",
+        text: error.message || "Erreur lors de la mise à jour du mot de passe",
       });
     } finally {
       setLoading(false);
@@ -90,10 +124,6 @@ export default function ResetPassword() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* Header */}
-      <AppHeader onContactClick={() => {}} />
-
-      {/* Main content */}
       <div className="max-w-md mx-auto mt-16 px-4">
         <div className="bg-white rounded-lg shadow-xl p-8">
           <h2 className="text-2xl font-bold text-center mb-8">
@@ -108,7 +138,14 @@ export default function ResetPassword() {
                   : "bg-red-50 text-red-700"
               }`}
             >
-              {message.text}
+              <div className="flex items-center">
+                {message.type === "success" ? (
+                  <CheckCircle className="h-5 w-5 mr-2" />
+                ) : (
+                  <AlertCircle className="h-5 w-5 mr-2" />
+                )}
+                <span>{message.text}</span>
+              </div>
             </div>
           )}
 
@@ -199,6 +236,17 @@ export default function ResetPassword() {
               {loading ? "Mise à jour..." : "Mettre à jour le mot de passe"}
             </button>
           </form>
+
+          {message?.type === "success" && (
+            <div className="mt-6 text-center">
+              <button
+                onClick={() => navigate("/login")}
+                className="text-blue-600 hover:text-blue-800 font-medium"
+              >
+                ← Retour à la page de connexion
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

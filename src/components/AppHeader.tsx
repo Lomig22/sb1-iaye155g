@@ -66,6 +66,15 @@ export default function AppHeader({ user }: AppHeaderProps) {
           >
             Contact
           </button>
+          {/* Add Dashboard link here */}
+          {user?.email && (
+            <Link
+              to={`/dashboard/${encodeURIComponent(user.email)}`}
+              className="text-gray-600 hover:text-gray-900"
+            >
+              Dashboard
+            </Link>
+          )}
         </div>
 
         {/* Desktop Auth Buttons */}
@@ -138,6 +147,15 @@ export default function AppHeader({ user }: AppHeaderProps) {
             >
               Contact
             </button>
+            {/* Add Dashboard link here */}
+            {user?.email && (
+              <Link
+                to={`/dashboard/${encodeURIComponent(user.email)}`}
+                className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md"
+              >
+                Dashboard
+              </Link>
+            )}
             {user ? (
               <button
                 onClick={handleSignOut}
