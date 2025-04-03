@@ -50,28 +50,65 @@ const PricingPage = () => {
       // Get current user from Supabase
       const {
         data: { user },
-        error,
+        error: userError,
       } = await supabase.auth.getUser();
 
-      if (error || !user) {
+      if (userError || !user) {
         alert("Veuillez vous connecter pour continuer");
         return;
       }
 
+      // Check for existing subscription
+      const { data: existingSubscriptions, error: subscriptionError } =
+        await supabase
+          .from("subscriptions")
+          .select("id")
+          .eq("user_id", user.id);
+
+      if (subscriptionError) {
+        console.error("Error checking subscriptions:", subscriptionError);
+        alert(
+          "Une erreur est survenue lors de la vérification de l'abonnement"
+        );
+        return;
+      }
+
+      if (existingSubscriptions && existingSubscriptions.length > 0) {
+        alert("Vous avez déjà un abonnement actif.");
+        return;
+      }
+
+      // Add new subscription to Supabase
+      const { error: insertError } = await supabase
+        .from("subscriptions")
+        .insert([
+          {
+            user_id: user.id,
+            status: "active",
+          },
+        ]);
+
+      if (insertError) {
+        console.error("Error creating subscription:", insertError);
+        alert("Erreur lors de la création de l'abonnement");
+        return;
+      }
+
+      // Proceed to Stripe payment
       let stripeUrl = "";
       switch (plan) {
         case "basic":
-          stripeUrl = `https://buy.stripe.com/9AQeXMeeggZDc4E145?prefilled_email=${encodeURIComponent(
+          stripeUrl = `https://buy.stripe.com/test_dR66s9cgGcRgcQU3cc?prefilled_email=${encodeURIComponent(
             user.email ?? ""
           )}`;
           break;
         case "pro":
-          stripeUrl = `https://buy.stripe.com/00g02Sc685gVfgQbIK?prefilled_email=${encodeURIComponent(
+          stripeUrl = `https://buy.stripe.com/test_dR66s9cgGcRgcQU3cc?prefilled_email=${encodeURIComponent(
             user.email ?? ""
           )}`;
           break;
         case "enterprise":
-          stripeUrl = `https://buy.stripe.com/5kA5nc5HK38N5Gg3cf?prefilled_email=${encodeURIComponent(
+          stripeUrl = `https://buy.stripe.com/test_dR66s9cgGcRgcQU3cc?prefilled_email=${encodeURIComponent(
             user.email ?? ""
           )}`;
           break;
