@@ -37,24 +37,54 @@ export default function ResetPassword() {
 
   useEffect(() => {
     const handleAuthentication = async () => {
-      const code = searchParams.get("code");
       const type = searchParams.get("type");
+      const code = searchParams.get("code");
+      const accessToken = searchParams.get("access_token");
+      const refreshToken = searchParams.get("refresh_token");
 
-      // Only handle password reset flow
-      if (type === "recovery" && code) {
-        try {
-          const { error } = await supabase.auth.exchangeAuthCodeForSession({
-            code,
-          });
-
-          if (error) {
+      if (type === "recovery") {
+        if (accessToken && refreshToken) {
+          // Production flow using tokens from the URL
+          try {
+            const { error } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+            if (error) {
+              setIsValidLink(false);
+              setMessage({
+                type: "error",
+                text: "Lien de réinitialisation invalide ou expiré",
+              });
+            }
+          } catch (error) {
             setIsValidLink(false);
             setMessage({
               type: "error",
               text: "Lien de réinitialisation invalide ou expiré",
             });
           }
-        } catch (error) {
+        } else if (code) {
+          // Local development flow using the code parameter
+          try {
+            const { error } = await supabase.auth.exchangeAuthCodeForSession({
+              code,
+            });
+            if (error) {
+              setIsValidLink(false);
+              setMessage({
+                type: "error",
+                text: "Lien de réinitialisation invalide ou expiré",
+              });
+            }
+          } catch (error) {
+            setIsValidLink(false);
+            setMessage({
+              type: "error",
+              text: "Lien de réinitialisation invalide ou expiré",
+            });
+          }
+        } else {
           setIsValidLink(false);
           setMessage({
             type: "error",
