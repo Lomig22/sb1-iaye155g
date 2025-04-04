@@ -67,9 +67,7 @@ export default function ResetPassword() {
         } else if (code) {
           // Local development flow using the code parameter
           try {
-            const { error } = await supabase.auth.exchangeAuthCodeForSession({
-              code,
-            });
+            const { error } = await supabase.auth.exchangeCodeForSession(code);
             if (error) {
               setIsValidLink(false);
               setMessage({
