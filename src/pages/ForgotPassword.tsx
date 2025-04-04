@@ -38,13 +38,10 @@ export default function ForgotPasswordPage() {
       setLoading(false);
       return;
     }
-    const redirectURL = `${import.meta.env.VITE_SITE_URL.replace(
-      /\/$/,
-      ""
-    )}/reset-password`;
+
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: redirectURL,
+        redirectTo: `https://paymentflow-git-fixing-reset-pw-payment-flow.vercel.app/reset-password`,
       });
 
       if (error) {
