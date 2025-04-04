@@ -40,11 +40,11 @@ export default function ResetPassword() {
       const code = searchParams.get("code");
       const type = searchParams.get("type");
 
+      // Only handle password reset flow
       if (type === "recovery" && code) {
         try {
           const { error } = await supabase.auth.exchangeAuthCodeForSession({
             code,
-            redirectTo: `${import.meta.env.VITE_SITE_URL}/reset-password`,
           });
 
           if (error) {
@@ -53,8 +53,6 @@ export default function ResetPassword() {
               type: "error",
               text: "Lien de réinitialisation invalide ou expiré",
             });
-            await supabase.auth.signOut();
-            navigate("/login");
           }
         } catch (error) {
           setIsValidLink(false);
@@ -62,12 +60,9 @@ export default function ResetPassword() {
             type: "error",
             text: "Lien de réinitialisation invalide ou expiré",
           });
-          await supabase.auth.signOut();
-          navigate("/login");
         }
       } else {
         setIsValidLink(false);
-        navigate("/login");
       }
     };
 
