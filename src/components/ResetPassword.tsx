@@ -37,60 +37,34 @@ export default function ResetPassword() {
 
   useEffect(() => {
     const handleAuthentication = async () => {
-      const type = searchParams.get("type");
       const code = searchParams.get("code");
-      const accessToken = searchParams.get("access_token");
-      const refreshToken = searchParams.get("refresh_token");
+      const type = searchParams.get("type");
 
-      if (type === "recovery") {
-        if (accessToken && refreshToken) {
-          // Production flow using tokens from the URL
-          try {
-            const { error } = await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken,
-            });
-            if (error) {
-              setIsValidLink(false);
-              setMessage({
-                type: "error",
-                text: "Lien de réinitialisation invalide ou expiré",
-              });
-            }
-          } catch (error) {
+      if (type === "recovery" && code) {
+        try {
+          const { error } = await supabase.auth.exchangeCodeForSession(code);
+
+          if (error) {
             setIsValidLink(false);
             setMessage({
               type: "error",
               text: "Lien de réinitialisation invalide ou expiré",
             });
+            await supabase.auth.signOut();
+            navigate("/login");
           }
-        } else if (code) {
-          // Local development flow using the code parameter
-          try {
-            const { error } = await supabase.auth.exchangeCodeForSession(code);
-            if (error) {
-              setIsValidLink(false);
-              setMessage({
-                type: "error",
-                text: "Lien de réinitialisation invalide ou expiré",
-              });
-            }
-          } catch (error) {
-            setIsValidLink(false);
-            setMessage({
-              type: "error",
-              text: "Lien de réinitialisation invalide ou expiré",
-            });
-          }
-        } else {
+        } catch (error) {
           setIsValidLink(false);
           setMessage({
             type: "error",
             text: "Lien de réinitialisation invalide ou expiré",
           });
+          await supabase.auth.signOut();
+          navigate("/login");
         }
       } else {
         setIsValidLink(false);
+        navigate("/login");
       }
     };
 

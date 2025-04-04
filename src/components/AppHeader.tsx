@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { PopupWidget } from "react-calendly";
 import { Link, useNavigate } from "react-router-dom";
 import { TrendingUp, Menu, X } from "lucide-react";
@@ -17,36 +17,6 @@ export default function AppHeader({ user }: AppHeaderProps) {
   const [showContactModal, setShowContactModal] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const showContactModalRef = useRef(showContactModal);
-  const isMobileMenuOpenRef = useRef(isMobileMenuOpen);
-
-  useEffect(() => {
-    showContactModalRef.current = showContactModal;
-  }, [showContactModal]);
-
-  useEffect(() => {
-    isMobileMenuOpenRef.current = isMobileMenuOpen;
-  }, [isMobileMenuOpen]);
-
-  // Add ESC key handler
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        // Close contact modal first if open
-        if (showContactModalRef.current) {
-          setShowContactModal(false);
-        }
-        // Then close mobile menu if open
-        else if (isMobileMenuOpenRef.current) {
-          setIsMobileMenuOpen(false);
-        }
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
-
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
     element?.scrollIntoView({ behavior: "smooth" });
@@ -56,18 +26,11 @@ export default function AppHeader({ user }: AppHeaderProps) {
   const handleSignOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
-      // If there's an error other than a 403, throw it
-      if (error && error.status !== 403) {
-        throw error;
+      if (!error) {
+        navigate("/");
       }
-    } catch (err: any) {
-      if (err?.status !== 403) {
-        console.error("Error signing out:", err);
-      }
-    } finally {
-      // Clear local storage and navigate to the home page
-      localStorage.clear();
-      navigate("/");
+    } catch (error) {
+      console.error("Error signing out:", error);
     }
   };
 
@@ -219,20 +182,6 @@ export default function AppHeader({ user }: AppHeaderProps) {
           </div>
         </div>
       )}
-
-      {/* Calendly Button - Adjusted for mobile */}
-      <div className="fixed bottom-20 right-4 z-[60] md:bottom-20">
-        <button
-          onClick={() =>
-            (window as any).Calendly.initPopupWidget({
-              url: "https://calendly.com/paymentfloww/30min",
-            })
-          }
-          className="bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-blue-700 transition-all text-sm md:text-base md:px-6 md:py-3"
-        >
-          planifier une réunion
-        </button>
-      </div>
 
       {showContactModal && (
         <ContactModal onClose={() => setShowContactModal(false)} />
