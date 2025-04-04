@@ -26,11 +26,18 @@ export default function AppHeader({ user }: AppHeaderProps) {
   const handleSignOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
-      if (!error) {
-        navigate("/");
+      // If there's an error other than a 403, throw it
+      if (error && error.status !== 403) {
+        throw error;
       }
-    } catch (error) {
-      console.error("Error signing out:", error);
+    } catch (err: any) {
+      if (err?.status !== 403) {
+        console.error("Error signing out:", err);
+      }
+    } finally {
+      // Clear local storage and navigate to the home page
+      localStorage.clear();
+      navigate("/");
     }
   };
 
