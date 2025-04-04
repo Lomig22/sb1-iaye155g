@@ -38,10 +38,13 @@ export default function ForgotPasswordPage() {
       setLoading(false);
       return;
     }
-
+    const redirectURL = `${import.meta.env.VITE_SITE_URL.replace(
+      /\/$/,
+      ""
+    )}/reset-password`;
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${import.meta.env.VITE_SITE_URL}/reset-password`,
+        redirectTo: redirectURL,
       });
 
       if (error) {
