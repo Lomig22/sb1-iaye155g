@@ -41,7 +41,7 @@ export default function ForgotPasswordPage() {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `https://paymentflow-git-fixing-reset-pw-payment-flow.vercel.app/reset-password`,
+        redirectTo: `https://payment-flow.fr/reset-password`,
       });
 
       if (error) {

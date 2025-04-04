@@ -48,12 +48,7 @@ export default function LoginPage() {
         throw new Error("Erreur de vérification de l'abonnement");
       }
 
-      if (subscriptions && subscriptions.length > 0) {
-        // Navigate to dashboard with encoded email in URL
-        navigate(`/dashboard/${encodeURIComponent(user.email)}`);
-      } else {
-        navigate("/");
-      }
+      navigate(`/dashboard/${encodeURIComponent(user.email)}`);
     } catch (error: any) {
       setMessage({
         type: "error",

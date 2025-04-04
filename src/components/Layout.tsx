@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation, Outlet, useNavigate } from "react-router-dom";
 import {
   TrendingUp,
@@ -9,6 +9,7 @@ import {
   FileText,
   Settings,
   Menu,
+  LayoutDashboard,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { AuthSessionMissingError } from "@supabase/supabase-js";
@@ -20,6 +21,29 @@ export default function Layout() {
   const [logoutError, setLogoutError] = useState<string | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const showLogoutConfirmRef = useRef(showLogoutConfirm);
+
+  useEffect(() => {
+    showLogoutConfirmRef.current = showLogoutConfirm;
+  }, [showLogoutConfirm]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        // Close modal if open
+        if (showLogoutConfirmRef.current) {
+          closeLogoutModal();
+        } else {
+          // Toggle sidebar
+          setIsSidebarOpen((prev) => !prev);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -60,6 +84,7 @@ export default function Layout() {
     { name: "Clients", href: "/clients", icon: Users },
     { name: "Créances", href: "/receivables", icon: FileText },
     { name: "Paramètres", href: "/settings", icon: Settings },
+    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   ];
 
   return (
@@ -130,8 +155,8 @@ export default function Layout() {
       </div>
 
       {/* Main content */}
-      <div className="pt-16">
-        <main className="py-6">
+      <div className="pt-8 flex-grow">
+        <main className="p-4 h-full">
           <Outlet />
         </main>
       </div>

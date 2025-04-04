@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PopupWidget } from "react-calendly";
 import { Link, useNavigate } from "react-router-dom";
 import { TrendingUp, Menu, X } from "lucide-react";
@@ -16,6 +16,36 @@ export default function AppHeader({ user }: AppHeaderProps) {
   const calendlyRef = useRef<any>(null);
   const [showContactModal, setShowContactModal] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const showContactModalRef = useRef(showContactModal);
+  const isMobileMenuOpenRef = useRef(isMobileMenuOpen);
+
+  useEffect(() => {
+    showContactModalRef.current = showContactModal;
+  }, [showContactModal]);
+
+  useEffect(() => {
+    isMobileMenuOpenRef.current = isMobileMenuOpen;
+  }, [isMobileMenuOpen]);
+
+  // Add ESC key handler
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        // Close contact modal first if open
+        if (showContactModalRef.current) {
+          setShowContactModal(false);
+        }
+        // Then close mobile menu if open
+        else if (isMobileMenuOpenRef.current) {
+          setIsMobileMenuOpen(false);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
