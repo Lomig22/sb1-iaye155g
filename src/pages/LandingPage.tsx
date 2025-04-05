@@ -850,6 +850,18 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
             }}
           />
         </div>
+        <div className="fixed bottom-20 right-4 z-[60] md:bottom-20">
+          <button
+            onClick={() =>
+              (window as any).Calendly.initPopupWidget({
+                url: "https://calendly.com/paymentfloww/30min",
+              })
+            }
+            className="bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-blue-700 transition-all text-sm md:text-base md:px-6 md:py-3"
+          >
+            planifier une réunion
+          </button>
+        </div>
       </main>
 
       {/* Footer */}

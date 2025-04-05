@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { PopupWidget } from "react-calendly";
 import { Link, useNavigate } from "react-router-dom";
 import { TrendingUp, Menu, X } from "lucide-react";
 import { supabase } from "../lib/supabase";
@@ -221,18 +220,6 @@ export default function AppHeader({ user }: AppHeaderProps) {
       )}
 
       {/* Calendly Button - Adjusted for mobile */}
-      <div className="fixed bottom-20 right-4 z-[60] md:bottom-20">
-        <button
-          onClick={() =>
-            (window as any).Calendly.initPopupWidget({
-              url: "https://calendly.com/paymentfloww/30min",
-            })
-          }
-          className="bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-blue-700 transition-all text-sm md:text-base md:px-6 md:py-3"
-        >
-          planifier une réunion
-        </button>
-      </div>
 
       {showContactModal && (
         <ContactModal onClose={() => setShowContactModal(false)} />
