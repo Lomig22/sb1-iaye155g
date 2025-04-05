@@ -70,6 +70,14 @@ export default function AppHeader({ user }: AppHeaderProps) {
     }
   };
 
+  const handleNavToSection = (id: string) => {
+    if (window.location.pathname === "/") {
+      scrollToSection(id);
+    } else {
+      navigate(`/#${id}`);
+    }
+  };
+
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -82,13 +90,13 @@ export default function AppHeader({ user }: AppHeaderProps) {
         {/* Desktop Navigation */}
         <div className="hidden md:flex space-x-8">
           <button
-            onClick={() => scrollToSection("features")}
+            onClick={() => handleNavToSection("features")}
             className="text-gray-600 hover:text-gray-900"
           >
             Fonctionnalités
           </button>
           <button
-            onClick={() => scrollToSection("testimonials")}
+            onClick={() => handleNavToSection("testimonials")}
             className="text-gray-600 hover:text-gray-900"
           >
             Témoignages

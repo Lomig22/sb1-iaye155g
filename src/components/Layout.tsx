@@ -10,6 +10,7 @@ import {
   Settings,
   Menu,
   LayoutDashboard,
+  UserRoundMinusIcon,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { AuthSessionMissingError } from "@supabase/supabase-js";
@@ -81,10 +82,10 @@ export default function Layout() {
 
   const navigation = [
     { name: "Tableau de bord", href: "/", icon: Home },
+    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Clients", href: "/clients", icon: Users },
     { name: "Créances", href: "/receivables", icon: FileText },
     { name: "Paramètres", href: "/settings", icon: Settings },
-    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   ];
 
   return (
@@ -108,7 +109,7 @@ export default function Layout() {
           onClick={() => setShowLogoutConfirm(true)}
           className="flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-md"
         >
-          <LogOut className="h-5 w-5 mr-2" />
+          <UserRoundMinusIcon className="h-5 w-5 mr-2" />
           Déconnexion
         </button>
       </div>
@@ -148,7 +149,7 @@ export default function Layout() {
             onClick={() => setShowLogoutConfirm(true)}
             className="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md"
           >
-            <LogOut className="h-5 w-5 mr-3" />
+            <UserRoundMinusIcon className="h-5 w-5 mr-3" />
             Déconnexion
           </button>
         </div>

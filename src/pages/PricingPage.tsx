@@ -3,6 +3,7 @@ import { motion, useInView } from "framer-motion";
 import { CheckCircle, TrendingUp } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useState } from "react";
+import Footer from "../components/Footer";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -363,108 +364,7 @@ const PricingPage = () => {
           />
         </motion.div>
       </motion.div>
-      <motion.footer
-        className="bg-gray-50 border-t border-gray-200 py-12"
-        variants={staggerContainer}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true }} // Trigger only when fully in view
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8"
-            variants={fadeInLeft}
-          >
-            <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <TrendingUp className="h-6 w-6 text-blue-600" />
-                <span className="text-lg font-semibold text-gray-900">
-                  PaymentFlow
-                </span>
-              </div>
-              <p className="text-gray-500 text-sm">
-                La solution de gestion des relances qui optimise votre
-                trésorerie.
-              </p>
-            </div>
-
-            <div>
-              <h4 className="font-semibold text-gray-900 mb-4">Produit</h4>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <button className="text-gray-500 hover:text-gray-700">
-                    Fonctionnalités
-                  </button>
-                </li>
-                <li>
-                  <button className="text-gray-500 hover:text-gray-700">
-                    Tarifs
-                  </button>
-                </li>
-                <li>
-                  <button className="text-gray-500 hover:text-gray-700">
-                    Témoignages
-                  </button>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-semibold text-gray-900 mb-4">Ressources</h4>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <button className="text-gray-500 hover:text-gray-700">
-                    Blog
-                  </button>
-                </li>
-                <li>
-                  <button className="text-gray-500 hover:text-gray-700">
-                    Guides
-                  </button>
-                </li>
-                <li>
-                  <button className="text-gray-500 hover:text-gray-700">
-                    Support
-                  </button>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-semibold text-gray-900 mb-4">Légal</h4>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <button className="text-gray-500 hover:text-gray-700">
-                    Politique de confidentialité
-                  </button>
-                </li>
-                <li>
-                  <button className="text-gray-500 hover:text-gray-700">
-                    Conditions d'utilisation
-                  </button>
-                </li>
-                <li>
-                  <button className="text-gray-500 hover:text-gray-700">
-                    Mentions légales
-                  </button>
-                </li>
-                <li>
-                  <button className="text-gray-500 hover:text-gray-700">
-                    Contactez-nous
-                  </button>
-                </li>
-              </ul>
-            </div>
-          </motion.div>
-
-          <motion.div
-            className="pt-8 border-t border-gray-200 text-center text-sm text-gray-500"
-            variants={fadeInLeft}
-          >
-            <p>© 2024 PaymentFlow. Tous droits réservés.</p>
-          </motion.div>
-        </div>
-      </motion.footer>
+      <Footer />
     </motion.div>
   );
 };
